@@ -1,0 +1,40 @@
+@import "tailwindcss";
+@config "../../tailwind.config.ts";
+
+:root {
+  --background: #0B0908; /* ink-950 */
+  --foreground: #F4EDE2; /* parchment-100 */
+
+  --card: #141210; /* ink-900 */
+  --card-foreground: #F4EDE2; /* parchment-100 */
+
+  --popover: #141210; /* ink-900 */
+  --popover-foreground: #F4EDE2; /* parchment-100 */
+
+  --primary: #E6A62E; /* amber-500 */
+  --primary-foreground: #0B0908; /* ink-950 */
+
+  --secondary: #1E1B18; /* ink-800 */
+  --secondary-foreground: #F4EDE2; /* parchment-100 */
+
+  --muted: #1E1B18; /* ink-800 */
+  --muted-foreground: #9C8F7A; /* parchment-500 */
+
+  --accent: #1E1B18; /* ink-800 */
+  --accent-foreground: #F4EDE2; /* parchment-100 */
+
+  --destructive: #7F1D1D; /* dark red background */
+  --destructive-foreground: #FEE2E2; /* light red text */
+
+  --border: #1E1B18; /* ink-800 */
+  --input: #1E1B18; /* ink-800 */
+  --ring: #E6A62E; /* amber-500 */
+
+  --radius: 0.5rem;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
