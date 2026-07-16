@@ -193,7 +193,7 @@ export default function DiscoverClient({
           <input
             name="q"
             type="text"
-            value={searchInput}
+            value={searchInput || ""}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search by title, author, or keyword..."
             className="w-full bg-ink-900 border border-ink-800 rounded-xl py-3 pl-12 pr-4 text-parchment-100 placeholder-parchment-500/40 text-sm focus:outline-none focus:border-amber-500/70 focus:ring-1 focus:ring-amber-500/50 transition-all shadow-inner"
@@ -376,7 +376,7 @@ export default function DiscoverClient({
                                   type="radio"
                                   name={`status-${olId}`}
                                   value={opt.value}
-                                  checked={checked}
+                                  checked={!!checked}
                                   className="sr-only"
                                   onChange={() => {
                                     setSelectedStatusMap((prev) => ({

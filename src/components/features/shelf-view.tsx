@@ -334,7 +334,7 @@ export default function ShelfView({
             </div>
           ) : (
             <TiltedCard
-              imageSrc={book.cover_url || ""}
+              imageSrc={book.cover_url || undefined}
               altText={`Cover of ${book.title}`}
               captionText={book.title}
               containerWidth="160px"

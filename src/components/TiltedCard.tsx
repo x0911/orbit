@@ -121,15 +121,27 @@ export default function TiltedCard({
           scale
         }}
       >
-        <motion.img
-          src={imageSrc}
-          alt={altText}
-          className="absolute top-0 left-0 object-cover rounded-[15px] will-change-transform [transform:translateZ(0)]"
-          style={{
-            width: imageWidth,
-            height: imageHeight
-          }}
-        />
+        {imageSrc ? (
+          <motion.img
+            src={imageSrc}
+            alt={altText}
+            className="absolute top-0 left-0 object-cover rounded-[15px] will-change-transform [transform:translateZ(0)]"
+            style={{
+              width: imageWidth,
+              height: imageHeight
+            }}
+          />
+        ) : (
+          <div 
+            className="absolute top-0 left-0 flex items-center justify-center text-center font-sans text-xs text-parchment-500 bg-ink-900 border border-ink-800 rounded-[15px] p-3 select-none"
+            style={{
+              width: imageWidth,
+              height: imageHeight
+            }}
+          >
+            {captionText || altText}
+          </div>
+        )}
 
         {displayOverlayContent && overlayContent && (
           <motion.div className="absolute top-0 left-0 z-[2] will-change-transform [transform:translateZ(30px)]">
