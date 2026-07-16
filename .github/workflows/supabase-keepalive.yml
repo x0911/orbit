@@ -1,0 +1,29 @@
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    # Runs at 06:00 UTC every 3rd day — comfortably inside Supabase's
+    # ~7-day free-tier inactivity pause window.
+    - cron: "0 6 */3 * *"
+  workflow_dispatch: {} # allow manual trigger from the Actions tab
+
+jobs:
+  ping-supabase:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          set -e
+          STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            "${NEXT_PUBLIC_SUPABASE_URL}/rest/v1/profiles?select=id&limit=1" \
+            -H "apikey: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}" \
+            -H "Authorization: Bearer ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}")
+          echo "Supabase responded with HTTP $STATUS"
+          cat /tmp/response.json
+          if [ "$STATUS" -ge 400 ]; then
+            echo "::error::Supabase keep-alive ping failed with status $STATUS"
+            exit 1
+          fi
