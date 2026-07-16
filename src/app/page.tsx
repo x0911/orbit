@@ -187,15 +187,13 @@ export default function HomePage() {
 
           {/* Magnetic specs button */}
           <div className="flex justify-center">
-            <Magnet magnetStrength={3} padding={80}>
-              <Link
-                href={user ? "/app/shelf" : "/login"}
-                className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-bold px-8 py-3.5 rounded-xl text-sm shadow-xl hover:shadow-amber-500/20 transition-all inline-flex items-center gap-1.5 focus:outline-none animate-pulse"
-              >
-                <Flame className="w-4 h-4 fill-current animate-pulse" />
-                {user ? "Open Dashboard" : "Launch Demo Account"}
-              </Link>
-            </Magnet>
+            <Link
+              href={user ? "/app/shelf" : "/login"}
+              className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-bold px-8 py-3.5 rounded-xl text-sm shadow-xl hover:shadow-amber-500/20 transition-all inline-flex items-center gap-1.5 focus:outline-none"
+            >
+              <Flame className="w-4 h-4 fill-current" />
+              {user ? "Open Dashboard" : "Launch Demo Account"}
+            </Link>
           </div>
 
           <div className="text-[10px] text-parchment-500/80 pt-12 space-y-2">

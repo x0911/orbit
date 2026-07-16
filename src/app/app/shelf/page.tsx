@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import ShelfView from "@/components/features/shelf-view";
+import Shelf3DToggle from "@/components/features/shelf-3d-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -89,18 +89,5 @@ export default async function ShelfPage() {
     });
   }
 
-  return (
-    <div className="space-y-8">
-      <div className="text-left">
-        <h1 className="font-sans text-3xl font-bold tracking-wide text-parchment-100">
-          My Library Shelf
-        </h1>
-        <p className="text-sm text-parchment-500 mt-1">
-          Keep track of books you want to read, are currently reading, or have
-          completed.
-        </p>
-      </div>
-      <ShelfView initialShelves={shelves} initialReviewMap={reviewMap} />
-    </div>
-  );
+  return <Shelf3DToggle initialShelves={shelves} initialReviewMap={reviewMap} />;
 }

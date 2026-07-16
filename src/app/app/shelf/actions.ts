@@ -208,6 +208,82 @@ export async function saveReview(bookId: string, rating: number, body: string) {
   return { success: true };
 }
 
+/**
+ * Directly change a shelf item's status (used by the 3D library "hand a book" UI,
+ * where the user can flip a book between Wishlist / Reading / Finished without
+ * necessarily logging pages first).
+ */
+export async function updateShelfStatus(
+  shelfId: string,
+  status: "want_to_read" | "reading" | "finished"
+) {
+  const supabase = await createClient();
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) {
+    return { success: false, error: "Authentication required" };
+  }
+
+  const { data: shelf, error: fetchError } = await supabase
+    .from("shelves")
+    .select(`
+      id,
+      user_id,
+      current_page,
+      started_at,
+      books (
+        page_count
+      )
+    `)
+    .eq("id", shelfId)
+    .single();
+
+  if (fetchError || !shelf) {
+    return { success: false, error: "Shelf record not found" };
+  }
+
+  if (shelf.user_id !== user.id) {
+    return { success: false, error: "Unauthorized access to this shelf" };
+  }
+
+  const bookPageCount = (shelf.books as unknown as { page_count: number })?.page_count || 0;
+
+  const updateData: {
+    status: "want_to_read" | "reading" | "finished";
+    current_page?: number;
+    started_at?: string | null;
+    finished_at?: string | null;
+    updated_at: string;
+  } = {
+    status,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (status === "reading") {
+    updateData.started_at = shelf.started_at || new Date().toISOString();
+    updateData.finished_at = null;
+  } else if (status === "finished") {
+    updateData.started_at = shelf.started_at || new Date().toISOString();
+    updateData.finished_at = new Date().toISOString();
+    updateData.current_page = bookPageCount || shelf.current_page;
+  } else if (status === "want_to_read") {
+    updateData.finished_at = null;
+  }
+
+  const { error: updateError } = await supabase
+    .from("shelves")
+    .update(updateData)
+    .eq("id", shelfId);
+
+  if (updateError) {
+    return { success: false, error: updateError.message };
+  }
+
+  revalidatePath("/app/shelf");
+  revalidatePath("/app/feed");
+  return { success: true, current_page: updateData.current_page };
+}
+
 export async function toggleFollow(followingId: string) {
   const supabase = await createClient();
 
