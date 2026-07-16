@@ -8,7 +8,6 @@ import ShelfCanvas from "@/components/features/shelf-canvas";
 import ProgressRings from "@/components/features/progress-rings";
 import FriendsFeedMockup from "@/components/features/friends-feed-mockup";
 import WrappedPreview from "@/components/features/wrapped-preview";
-import Magnet from "@/components/Magnet";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import ThemeToggle from "@/components/theme-toggle";

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, Trash2, Edit3, X, ArrowRight } from "lucide-react";
@@ -56,16 +57,16 @@ export default function ShelfView({
     useState<Record<string, number>>(initialReviewMap);
   const [selectedItem, setSelectedItem] = useState<ShelfItem | null>(null);
   const [animateModal, setAnimateModal] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [animateRemoveConfirm, setAnimateRemoveConfirm] = useState(false);
 
   // ── Entrance animation state ───────────────────────────────────────────
   // After mount we flip this to start the stagger cascade
   const [isReady, setIsReady] = useState(false);
   // Per-section visibility (driven by IntersectionObserver)
-  const [sectionVisible, setSectionVisible] = useState<[boolean, boolean, boolean]>([
-    false,
-    false,
-    false,
-  ]);
+  const [sectionVisible, setSectionVisible] = useState<
+    [boolean, boolean, boolean]
+  >([false, false, false]);
   const sectionRefs = [
     useRef<HTMLElement>(null),
     useRef<HTMLElement>(null),
@@ -121,7 +122,7 @@ export default function ShelfView({
             observer.disconnect();
           }
         },
-        { threshold: 0.08 }
+        { threshold: 0.08 },
       );
       observer.observe(ref.current);
       observers.push(observer);
@@ -131,15 +132,18 @@ export default function ShelfView({
   }, []);
 
   // Open modal handler
-  const handleOpenItem = useCallback(async (item: ShelfItem) => {
-    setSelectedItem(item);
-    setPagesLogValue("");
-    setReviewRating(reviewMap[item.books.id] || 5);
-    setActionError("");
-    setActionSuccess("");
-    setReviewBody("");
-    setTimeout(() => setAnimateModal(true), 10);
-  }, [reviewMap]);
+  const handleOpenItem = useCallback(
+    async (item: ShelfItem) => {
+      setSelectedItem(item);
+      setPagesLogValue("");
+      setReviewRating(reviewMap[item.books.id] || 5);
+      setActionError("");
+      setActionSuccess("");
+      setReviewBody("");
+      setTimeout(() => setAnimateModal(true), 10);
+    },
+    [reviewMap],
+  );
 
   // Close modal handler
   const handleCloseModal = useCallback(() => {
@@ -272,20 +276,28 @@ export default function ShelfView({
     }
   };
 
-  // Handle remove book
-  const handleRemoveBook = async () => {
+  // Handle remove book trigger
+  const handleRemoveBook = () => {
     if (!selectedItem) return;
-    if (
-      !confirm(`Are you sure you want to remove "${selectedItem.books.title}"?`)
-    )
-      return;
+    setShowRemoveConfirm(true);
+    setTimeout(() => setAnimateRemoveConfirm(true), 10);
+  };
 
+  const closeRemoveConfirm = () => {
+    setAnimateRemoveConfirm(false);
+    setTimeout(() => setShowRemoveConfirm(false), 200);
+  };
+
+  const handleConfirmRemove = async () => {
+    if (!selectedItem) return;
     const res = await removeFromShelf(selectedItem.id);
     if (res.success) {
       setShelves(shelves.filter((s) => s.id !== selectedItem.id));
+      closeRemoveConfirm();
       handleCloseModal();
     } else {
       setActionError(res.error || "Failed to remove book");
+      closeRemoveConfirm();
     }
   };
 
@@ -313,7 +325,10 @@ export default function ShelfView({
           {/* Glow halo on hover */}
           <span
             className="absolute inset-0 rounded-xl pointer-events-none z-10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
-            style={{ boxShadow: "0 0 20px 2px rgba(230,166,46,0.22), 0 0 40px 4px rgba(230,166,46,0.08)" }}
+            style={{
+              boxShadow:
+                "0 0 20px 2px rgba(230,166,46,0.22), 0 0 40px 4px rgba(230,166,46,0.08)",
+            }}
           />
 
           {prefersReducedMotion ? (
@@ -487,18 +502,25 @@ export default function ShelfView({
       </div>
 
       {/* ── Detail Modal Overlay ─────────────────────────────────────────── */}
-      {selectedItem && (
+      {selectedItem && typeof window !== "undefined" && createPortal(
         <div
-          className={`fixed inset-0 z-50 flex items-center justify-center px-4 bg-ink-950/80 backdrop-blur-sm transition-opacity duration-200 ${
-            animateModal ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
         >
+          {/* Backdrop overlay */}
+          <div
+            className={`fixed inset-0 bg-ink-950/80 backdrop-blur-sm transition-opacity duration-200 ${
+              animateModal ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={handleCloseModal}
+          />
+
+          {/* Modal Box */}
           <div
             ref={modalRef}
-            className={`bg-ink-900 border border-ink-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative transition-all transform duration-200 ${
+            className={`relative bg-ink-900 border border-ink-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row transition-all transform duration-200 ${
               animateModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
             }`}
           >
@@ -565,12 +587,12 @@ export default function ShelfView({
             {/* Right: Logging & reviewing */}
             <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto max-h-[500px] md:max-h-none text-left">
               {actionError && (
-                <div className="p-3 rounded-lg bg-red-950/40 border border-red-900/50 text-red-200 text-xs">
+                <div className="p-3 rounded-lg dark:bg-red-950/40 border dark:border-red-900/50 dark:text-red-200 bg-red-100/40 border-red-200/50 text-red-800 text-xs">
                   {actionError}
                 </div>
               )}
               {actionSuccess && (
-                <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-900/50 text-emerald-200 text-xs">
+                <div className="p-3 rounded-lg dark:bg-emerald-950/40 border dark:border-emerald-900/50 dark:text-emerald-200 bg-emerald-100/40 border-emerald-200/50 text-emerald-800 text-xs">
                   {actionSuccess}
                 </div>
               )}
@@ -703,7 +725,49 @@ export default function ShelfView({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
+      )}
+
+      {showRemoveConfirm && typeof window !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          {/* Backdrop overlay */}
+          <div 
+            className={`fixed inset-0 bg-ink-950/85 backdrop-blur-sm transition-opacity duration-200 ${
+              animateRemoveConfirm ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={closeRemoveConfirm}
+          />
+          
+          {/* Modal Box */}
+          <div 
+            className={`relative bg-ink-900 border border-ink-800 rounded-2xl max-w-sm w-full p-6 text-left shadow-2xl transition-all transform duration-200 ${
+              animateRemoveConfirm ? "scale-100 opacity-100" : "scale-95 opacity-0"
+            }`}
+          >
+            <h3 className="font-sans text-lg font-bold text-parchment-100 mb-2">
+              Remove Book
+            </h3>
+            <p className="text-sm text-parchment-500 mb-6">
+              Are you sure you want to remove &ldquo;{selectedItem?.books.title}&rdquo; from your shelf? Your reading progress and history for this book will be permanently deleted.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeRemoveConfirm}
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-ink-950 border border-ink-800 text-parchment-300 hover:text-parchment-100 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmRemove}
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition-all cursor-pointer border border-transparent"
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

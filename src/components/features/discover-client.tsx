@@ -4,13 +4,7 @@ import { useState, useCallback, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Search,
-  Plus,
-  CheckCircle,
-  Loader2,
-  BookOpen,
-} from "lucide-react";
+import { Search, Plus, CheckCircle, Loader2, BookOpen } from "lucide-react";
 import { addToShelf } from "@/app/app/shelf/actions";
 
 interface OpenLibraryBook {
@@ -37,12 +31,26 @@ interface DiscoverClientProps {
 
 const GENRES = [
   { label: "All Genres", value: "" },
-  { label: "Fiction", value: "Fiction" },
-  { label: "Science Fiction", value: "Science Fiction" },
-  { label: "Fantasy", value: "Fantasy" },
-  { label: "Romance", value: "Romance" },
-  { label: "History", value: "History" },
-  { label: "Biography", value: "Biography" },
+  { label: "Fantasy", value: "fantasy" },
+  { label: "Science Fiction", value: "science_fiction" },
+  { label: "Mystery", value: "mystery" },
+  { label: "Thriller", value: "thrillers" },
+  { label: "Romance", value: "romance" },
+  { label: "Horror", value: "horror" },
+  { label: "Historical Fiction", value: "historical_fiction" },
+  { label: "Adventure", value: "adventure" },
+  { label: "Young Adult", value: "young_adult_fiction" },
+  { label: "Children's", value: "children" },
+  { label: "Biography", value: "biography" },
+  { label: "History", value: "history" },
+  { label: "Poetry", value: "poetry" },
+  { label: "Classics", value: "classic_literature" },
+  { label: "Crime", value: "crime" },
+  { label: "Comics & Graphic Novels", value: "comics" },
+  { label: "Self-Help", value: "self_help" },
+  { label: "Business", value: "business" },
+  { label: "Religion & Spirituality", value: "religion" },
+  { label: "Cooking", value: "cooking" },
 ];
 
 export default function DiscoverClient({
@@ -63,17 +71,21 @@ export default function DiscoverClient({
   // ── Local state ────────────────────────────────────────────────────────
   const [searchInput, setSearchInput] = useState(initialQuery);
   // Optimistic shelf status map — updated immediately on submit
-  const [statusMap, setStatusMap] = useState<Record<string, string>>(
-    initialStatusMap,
-  );
+  const [statusMap, setStatusMap] =
+    useState<Record<string, string>>(initialStatusMap);
   // Client-selected local status map for toggling before submit
-  const [selectedStatusMap, setSelectedStatusMap] = useState<Record<string, string>>({});
+  const [selectedStatusMap, setSelectedStatusMap] = useState<
+    Record<string, string>
+  >({});
   // Per-book loading / success state for shelf buttons
   const [bookLoading, setBookLoading] = useState<Record<string, boolean>>({});
   const [bookSuccess, setBookSuccess] = useState<Record<string, boolean>>({});
   const [bookError, setBookError] = useState<Record<string, string>>({});
   // Global banner for error fallback
-  const [banner, setBanner] = useState<{ type: "success" | "error"; msg: string } | null>(null);
+  const [banner, setBanner] = useState<{
+    type: "success" | "error";
+    msg: string;
+  } | null>(null);
 
   // ── URL navigation helper ──────────────────────────────────────────────
   const navigateTo = useCallback(
@@ -132,7 +144,10 @@ export default function DiscoverClient({
 
         if (res.success) {
           setBookSuccess((prev) => ({ ...prev, [olId]: true }));
-          setBanner({ type: "success", msg: `"${book.title}" shelf status updated!` });
+          setBanner({
+            type: "success",
+            msg: `"${book.title}" shelf status updated!`,
+          });
           // Auto-clear success tick after 2s
           setTimeout(() => {
             setBookSuccess((prev) => ({ ...prev, [olId]: false }));
@@ -170,8 +185,8 @@ export default function DiscoverClient({
         <div
           className={`p-4 rounded-lg flex items-center gap-2 text-sm shadow-sm transition-all ${
             banner.type === "success"
-              ? "bg-emerald-950/40 border border-emerald-900/50 text-emerald-200"
-              : "bg-red-950/40 border border-red-900/50 text-red-200"
+              ? "dark:bg-emerald-950/40 border dark:border-emerald-900/50 dark:text-emerald-200 bg-emerald-100/40 border-emerald-200/50 text-emerald-800"
+              : "dark:bg-red-950/40 border dark:border-red-900/50 dark:text-red-200 bg-red-100/40 border-red-200/50 text-red-800"
           }`}
         >
           <CheckCircle className="w-5 h-5 shrink-0" />
@@ -204,7 +219,11 @@ export default function DiscoverClient({
           disabled={isPending}
           className="bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-ink-950 font-semibold px-6 py-3 rounded-xl text-sm transition-all focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer flex items-center gap-2"
         >
-          {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+          {isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Search className="w-4 h-4" />
+          )}
           Search
         </button>
       </form>
@@ -291,6 +310,8 @@ export default function DiscoverClient({
               const isLoading = !!bookLoading[olId];
               const isSuccess = !!bookSuccess[olId];
               const cardError = bookError[olId];
+              const hasStatusChanged = selectedStatusMap[olId] !== undefined && selectedStatusMap[olId] !== currentStatus;
+              const isButtonDisabled = isLoading || (!!currentStatus && !hasStatusChanged);
 
               const bookDetailUrl = `/book/${book.slug || olId}`;
 
@@ -301,7 +322,10 @@ export default function DiscoverClient({
                 >
                   <div className="space-y-4">
                     {/* Cover & title link */}
-                    <Link href={bookDetailUrl} className="block group/cover space-y-4">
+                    <Link
+                      href={bookDetailUrl}
+                      className="block group/cover space-y-4"
+                    >
                       <div className="relative aspect-[2/3] w-32 mx-auto rounded-lg overflow-hidden border border-ink-800 bg-ink-950 shadow-md group-hover/cover:border-amber-500/50 transition-all">
                         {book.cover_url ? (
                           <Image
@@ -346,7 +370,9 @@ export default function DiscoverClient({
                     {isLoggedIn ? (
                       <div className="flex flex-col gap-3">
                         {cardError && (
-                          <p className="text-[10px] text-red-400 text-center">{cardError}</p>
+                          <p className="text-[10px] text-red-400 text-center">
+                            {cardError}
+                          </p>
                         )}
 
                         {/* Status radio buttons */}
@@ -361,7 +387,10 @@ export default function DiscoverClient({
                             { value: "reading", label: "Reading" },
                             { value: "finished", label: "Finished" },
                           ].map((opt) => {
-                            const activeStatus = selectedStatusMap[olId] || currentStatus || "want_to_read";
+                            const activeStatus =
+                              selectedStatusMap[olId] ||
+                              currentStatus ||
+                              "want_to_read";
                             const checked = activeStatus === opt.value;
                             return (
                               <label
@@ -394,7 +423,7 @@ export default function DiscoverClient({
                         {/* Submit button — fully client-side, no form action redirect */}
                         <button
                           type="button"
-                          disabled={isLoading}
+                          disabled={isButtonDisabled}
                           onClick={() => {
                             const selectedStatus =
                               selectedStatusMap[olId] ||
@@ -403,10 +432,12 @@ export default function DiscoverClient({
 
                             handleAddToShelf(book, selectedStatus);
                           }}
-                          className={`w-full py-2 rounded-lg text-xs font-semibold transition-all focus:outline-none flex items-center justify-center gap-1 cursor-pointer border ${
+                          className={`w-full py-2 rounded-lg text-xs font-semibold transition-all focus:outline-none flex items-center justify-center gap-1 border ${
                             isSuccess
                               ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-400"
-                              : "bg-ink-800 hover:bg-amber-500 hover:text-ink-950 text-parchment-100 border-ink-850 hover:border-transparent"
+                              : isButtonDisabled
+                                ? "bg-ink-800/40 border-ink-850/40 text-parchment-500 cursor-not-allowed"
+                                : "bg-ink-800 hover:bg-amber-500 hover:text-ink-950 text-parchment-100 border-ink-850 hover:border-transparent cursor-pointer"
                           }`}
                         >
                           {isLoading ? (

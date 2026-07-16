@@ -76,7 +76,7 @@ export default async function DiscoverPage({
   let loadingError = "";
   let totalItems = 0;
 
-  if (query.trim().length > 0) {
+  if (query.trim().length > 0 || selectedGenre.trim().length > 0) {
     try {
       const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}${
         selectedGenre ? `&subject=${encodeURIComponent(selectedGenre)}` : ""

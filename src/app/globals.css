@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @config "../../tailwind.config.ts";
 
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   /* Dynamic RGB channel components for opacity modifiers */
   --ink-950-rgb: 6 11 8;      /* #060b08 */

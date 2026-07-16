@@ -3,7 +3,11 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Star, X, BookOpen, PenTool, ListChecks, Loader2 } from "lucide-react";
-import { logProgress, saveReview, updateShelfStatus } from "@/app/app/shelf/actions";
+import {
+  logProgress,
+  saveReview,
+  updateShelfStatus,
+} from "@/app/app/shelf/actions";
 import type { LibraryBook } from "./library-3d-experience";
 
 type Tab = "progress" | "review" | "status";
@@ -22,9 +26,15 @@ export default function BookHandUI({
   const [rating, setRating] = useState(book.rating || 5);
   const [reviewBody, setReviewBody] = useState("");
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
-  const progressPct = Math.min(100, Math.round((book.currentPage / book.pageCount) * 100));
+  const progressPct = Math.min(
+    100,
+    Math.round((book.currentPage / book.pageCount) * 100),
+  );
 
   const handleLogPages = async () => {
     const pages = parseInt(pagesInput, 10);
@@ -44,7 +54,10 @@ export default function BookHandUI({
         status: res.finished ? "finished" : "reading",
       });
       setPagesInput("");
-      setMessage({ type: "success", text: res.finished ? "Finished the book! 🎉" : "Pages logged!" });
+      setMessage({
+        type: "success",
+        text: res.finished ? "Finished the book! 🎉" : "Pages logged!",
+      });
     } else {
       setMessage({ type: "error", text: res.error || "Failed to log pages" });
     }
@@ -73,11 +86,17 @@ export default function BookHandUI({
       onUpdate({
         ...book,
         status,
-        currentPage: typeof res.current_page === "number" ? res.current_page : book.currentPage,
+        currentPage:
+          typeof res.current_page === "number"
+            ? res.current_page
+            : book.currentPage,
       });
       setMessage({ type: "success", text: "Status updated!" });
     } else {
-      setMessage({ type: "error", text: res.error || "Failed to update status" });
+      setMessage({
+        type: "error",
+        text: res.error || "Failed to update status",
+      });
     }
   };
 
@@ -88,7 +107,13 @@ export default function BookHandUI({
         <div className="flex items-center gap-4 p-5 border-b border-ink-850">
           <div className="relative w-12 h-16 shrink-0 rounded-md overflow-hidden border border-ink-800 bg-ink-950">
             {book.coverUrl ? (
-              <Image src={book.coverUrl} alt={book.title} fill sizes="48px" className="object-cover" />
+              <Image
+                src={book.coverUrl}
+                alt={book.title}
+                fill
+                sizes="48px"
+                className="object-cover"
+              />
             ) : (
               <div className="absolute inset-0 flex items-center justify-center text-[7px] text-parchment-500 p-1 text-center">
                 {book.title}
@@ -96,8 +121,12 @@ export default function BookHandUI({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <h3 className="font-sans font-bold text-parchment-100 text-sm truncate">{book.title}</h3>
-            <p className="text-xs text-parchment-500 truncate">by {book.author}</p>
+            <h3 className="font-sans font-bold text-parchment-100 text-sm truncate">
+              {book.title}
+            </h3>
+            <p className="text-xs text-parchment-500 truncate">
+              by {book.author}
+            </p>
             <span className="inline-block mt-1 text-[9px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20">
               {book.status.replace(/_/g, " ")}
             </span>
@@ -113,13 +142,11 @@ export default function BookHandUI({
 
         {/* Tabs */}
         <div className="flex border-b border-ink-850">
-          {(
-            [
-              { id: "progress" as Tab, label: "Progress", icon: BookOpen },
-              { id: "review" as Tab, label: "Review & Rating", icon: PenTool },
-              { id: "status" as Tab, label: "Status", icon: ListChecks },
-            ]
-          ).map((t) => (
+          {[
+            { id: "progress" as Tab, label: "Progress", icon: BookOpen },
+            { id: "review" as Tab, label: "Review & Rating", icon: PenTool },
+            { id: "status" as Tab, label: "Status", icon: ListChecks },
+          ].map((t) => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
@@ -141,8 +168,9 @@ export default function BookHandUI({
             <div
               className={`text-xs px-3 py-2 rounded-lg border ${
                 message.type === "success"
-                  ? "bg-emerald-950/40 border-emerald-900/50 text-emerald-200"
-                  : "bg-red-950/40 border-red-900/50 text-red-200"
+                  ? // Let's have light theme classes as we have dark ones
+                    "dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-200 bg-emerald-100/40 border-emerald-200/50 text-emerald-800"
+                  : "dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-200 bg-red-100/40 border-red-200/50 text-red-800"
               }`}
             >
               {message.text}
@@ -181,7 +209,11 @@ export default function BookHandUI({
                     disabled={busy}
                     className="bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-ink-950 font-bold px-4 py-2 rounded-lg text-xs transition-all cursor-pointer flex items-center gap-1.5"
                   >
-                    {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Log Pages"}
+                    {busy ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      "Log Pages"
+                    )}
                   </button>
                 </div>
               )}
@@ -202,7 +234,9 @@ export default function BookHandUI({
                       onClick={() => setRating(star)}
                       className="p-1 text-amber-500 cursor-pointer"
                     >
-                      <Star className={`w-6 h-6 ${star <= rating ? "fill-current" : "opacity-20"}`} />
+                      <Star
+                        className={`w-6 h-6 ${star <= rating ? "fill-current" : "opacity-20"}`}
+                      />
                     </button>
                   ))}
                 </div>
@@ -224,14 +258,20 @@ export default function BookHandUI({
                 disabled={busy}
                 className="w-full bg-ink-850 hover:bg-ink-800 disabled:opacity-60 border border-ink-800 hover:border-amber-500/20 text-parchment-100 font-semibold px-4 py-2.5 rounded-lg text-xs transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Save Review"}
+                {busy ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  "Save Review"
+                )}
               </button>
             </div>
           )}
 
           {tab === "status" && (
             <div className="space-y-3">
-              <p className="text-xs text-parchment-500">Move this book to a different shelf status:</p>
+              <p className="text-xs text-parchment-500">
+                Move this book to a different shelf status:
+              </p>
               <div className="flex gap-2">
                 {[
                   { value: "want_to_read" as const, label: "Wishlist" },

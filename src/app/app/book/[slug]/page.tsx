@@ -4,7 +4,6 @@ import { notFound, redirect } from "next/navigation";
 import {
   ChevronLeft,
   Plus,
-  Trash2,
   Calendar,
   BookOpen,
   PenTool,
@@ -13,9 +12,9 @@ import { createClient } from "@/lib/supabase/server";
 import {
   logProgress,
   saveReview,
-  removeFromShelf,
 } from "@/app/app/shelf/actions";
 import InteractiveStars from "@/components/features/interactive-stars";
+import RemoveBookButton from "@/components/features/remove-book-button";
 
 interface ReadingLog {
   id: string;
@@ -103,15 +102,6 @@ export default async function AuthenticatedBookPage({
     await saveReview(book.id, rating, body);
   };
 
-  const handleRemove = async () => {
-    "use server";
-    if (!shelf) return;
-    const res = await removeFromShelf(shelf.id);
-    if (res.success) {
-      redirect("/app/shelf");
-    }
-  };
-
   const progressPercent =
     shelf && book.page_count
       ? Math.min(100, Math.round((shelf.current_page / book.page_count) * 100))
@@ -161,15 +151,7 @@ export default async function AuthenticatedBookPage({
             </div>
 
             {shelf && (
-              <form action={handleRemove}>
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center gap-2 w-full bg-ink-950 border border-red-950/20 hover:border-red-900/40 text-red-400/80 hover:text-red-400 hover:bg-red-950/10 px-4 py-2.5 rounded-lg text-sm transition-all focus:outline-none focus:ring-1 focus:ring-red-500 cursor-pointer"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Remove from Shelf
-                </button>
-              </form>
+              <RemoveBookButton shelfId={shelf.id} bookTitle={book.title} />
             )}
           </div>
         </div>
