@@ -490,7 +490,20 @@ export default function ShelfView({
                     <label className="block text-[10px] font-semibold text-parchment-500 uppercase tracking-wider mb-2">
                       Your Rating (Interactive)
                     </label>
-                    <div className="flex gap-1" role="radiogroup" aria-label="Book rating">
+                    <div
+                      className="flex gap-1"
+                      role="radiogroup"
+                      aria-label="Book rating"
+                      onKeyDown={(e) => {
+                        if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+                          e.preventDefault();
+                          setReviewRating((r) => Math.min(5, r + 1));
+                        } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+                          e.preventDefault();
+                          setReviewRating((r) => Math.max(1, r - 1));
+                        }
+                      }}
+                    >
                       {[1, 2, 3, 4, 5].map((star) => (
                         <button
                           key={star}
