@@ -2,17 +2,31 @@
 @config "../../tailwind.config.ts";
 
 :root {
-  --ink-950: #060B08; /* deep dark forest ink background */
-  --ink-900: #0D1410; /* forest card background */
-  --ink-800: #17241E; /* forest borders */
-  
-  --accent-light: #34D399; /* emerald 400 */
-  --accent-DEFAULT: #10B981; /* emerald 500 */
-  --accent-dark: #059669; /* emerald 600 */
+  /* Dynamic RGB channel components for opacity modifiers */
+  --ink-950-rgb: 6 11 8;      /* #060b08 */
+  --ink-900-rgb: 13 20 16;    /* #0d1410 */
+  --ink-850-rgb: 18 28 23;    /* #121c17 */
+  --ink-800-rgb: 23 36 30;    /* #17241e */
 
-  --parchment-100: #ECFDF5; /* emerald-50 light cream text */
-  --parchment-300: #D1FAE5;
-  --parchment-500: #6EE7B7; /* soft sage muted text */
+  --accent-light-rgb: 52 211 153; /* emerald 400 */
+  --accent-DEFAULT-rgb: 16 185 129; /* emerald 500 */
+  --accent-dark-rgb: 5 150 105;   /* emerald 600 */
+
+  --parchment-100-rgb: 236 253 245; /* light cream */
+  --parchment-300-rgb: 209 250 229;
+  --parchment-500-rgb: 110 231 183;
+
+  /* standard hex mappings */
+  --ink-950: rgb(var(--ink-950-rgb));
+  --ink-900: rgb(var(--ink-900-rgb));
+  --ink-850: rgb(var(--ink-850-rgb));
+  --ink-800: rgb(var(--ink-800-rgb));
+  --accent-light: rgb(var(--accent-light-rgb));
+  --accent-DEFAULT: rgb(var(--accent-DEFAULT-rgb));
+  --accent-dark: rgb(var(--accent-dark-rgb));
+  --parchment-100: rgb(var(--parchment-100-rgb));
+  --parchment-300: rgb(var(--parchment-300-rgb));
+  --parchment-500: rgb(var(--parchment-500-rgb));
 
   --background: var(--ink-950);
   --foreground: var(--parchment-100);
@@ -35,8 +49,8 @@
   --accent: var(--ink-800);
   --accent-foreground: var(--parchment-100);
 
-  --destructive: #7F1D1D;
-  --destructive-foreground: #FEE2E2;
+  --destructive: #7f1d1d;
+  --destructive-foreground: #fee2e2;
 
   --border: var(--ink-800);
   --input: var(--ink-800);
@@ -46,17 +60,18 @@
 }
 
 .light {
-  --ink-950: #F4FAF7; /* soft light cream-mint background */
-  --ink-900: #E6F4ED; /* light card background */
-  --ink-800: #D2EDDE; /* light border */
+  --ink-950-rgb: 244 250 247; /* soft light cream-mint */
+  --ink-900-rgb: 230 244 237; /* light card */
+  --ink-850-rgb: 220 240 227; /* light borders middle */
+  --ink-800-rgb: 210 237 222; /* light borders */
 
-  --accent-light: #059669; /* emerald 600 */
-  --accent-DEFAULT: #047857; /* emerald 700 - dark green for readability */
-  --accent-dark: #065F46; /* emerald 800 */
+  --accent-light-rgb: 5 150 105;
+  --accent-DEFAULT-rgb: 4 120 87; /* emerald 700 - dark green for high contrast */
+  --accent-dark-rgb: 6 95 70;
 
-  --parchment-100: #062F1E; /* deep forest text */
-  --parchment-300: #0A3C27;
-  --parchment-500: #047857; /* readable muted green text */
+  --parchment-100-rgb: 6 47 30; /* deep dark green text */
+  --parchment-300-rgb: 10 60 39;
+  --parchment-500-rgb: 4 120 87;
 }
 
 body {

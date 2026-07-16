@@ -70,7 +70,7 @@ export default function WrappedPreview() {
           setGenresCount(Math.round(stateObj.genres));
         },
       },
-      0
+      0,
     );
 
     // 2. Animate SVG stacked bar widths
@@ -88,7 +88,7 @@ export default function WrappedPreview() {
           setFictionWidth(stateObj.fic);
         },
       },
-      0.2 // slight delay
+      0.2, // slight delay
     );
 
     return () => {
@@ -102,14 +102,11 @@ export default function WrappedPreview() {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="max-w-4xl mx-auto space-y-12 py-8 px-4"
-    >
+    <div ref={containerRef} className="max-w-4xl mx-auto space-y-12 py-8 px-4">
       {/* Counters Grid */}
       <div className="grid grid-cols-3 gap-4 md:gap-8 text-center">
         <div className="bg-ink-900 border border-ink-850 p-6 rounded-2xl space-y-1 shadow-lg">
-          <span className="block font-serif text-3xl md:text-5xl font-bold tracking-tight text-amber-500">
+          <span className="block font-sans text-3xl md:text-5xl font-bold tracking-tight text-amber-500">
             {booksRead}
           </span>
           <span className="block text-[10px] md:text-xs text-parchment-500 uppercase font-semibold tracking-wider">
@@ -118,7 +115,7 @@ export default function WrappedPreview() {
         </div>
 
         <div className="bg-ink-900 border border-ink-850 p-6 rounded-2xl space-y-1 shadow-lg">
-          <span className="block font-serif text-3xl md:text-5xl font-bold tracking-tight text-amber-500">
+          <span className="block font-sans text-3xl md:text-5xl font-bold tracking-tight text-amber-500">
             {formatNumber(pagesTurned)}
           </span>
           <span className="block text-[10px] md:text-xs text-parchment-500 uppercase font-semibold tracking-wider">
@@ -127,7 +124,7 @@ export default function WrappedPreview() {
         </div>
 
         <div className="bg-ink-900 border border-ink-850 p-6 rounded-2xl space-y-1 shadow-lg">
-          <span className="block font-serif text-3xl md:text-5xl font-bold tracking-tight text-amber-500">
+          <span className="block font-sans text-3xl md:text-5xl font-bold tracking-tight text-amber-500">
             {genresCount}
           </span>
           <span className="block text-[10px] md:text-xs text-parchment-500 uppercase font-semibold tracking-wider">
@@ -139,7 +136,7 @@ export default function WrappedPreview() {
       {/* SVG Genre Breakdown Bar Chart */}
       <div className="bg-ink-900 border border-ink-850 p-8 rounded-2xl space-y-6 shadow-lg">
         <div className="text-left space-y-1">
-          <h3 className="font-serif font-bold text-sm text-parchment-100">
+          <h3 className="font-sans font-bold text-sm text-parchment-100">
             Genre Breakdown Preview
           </h3>
           <p className="text-xs text-parchment-500">
@@ -149,7 +146,11 @@ export default function WrappedPreview() {
 
         {/* Hand-rolled horizontal stacked SVG bar chart */}
         <div className="w-full h-8 rounded-xl overflow-hidden border border-ink-950 bg-ink-950">
-          <svg ref={chartRef} className="w-full h-full" preserveAspectRatio="none">
+          <svg
+            ref={chartRef}
+            className="w-full h-full"
+            preserveAspectRatio="none"
+          >
             {/* Sci-Fi rect */}
             <rect
               x="0"
@@ -181,15 +182,21 @@ export default function WrappedPreview() {
         <div className="flex flex-wrap justify-between items-center gap-4 text-xs font-semibold pt-2">
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded bg-[#E6A62E] block" />
-            <span className="text-parchment-300">Sci-Fi ({Math.round(sciFiWidth)}%)</span>
+            <span className="text-parchment-300">
+              Sci-Fi ({Math.round(sciFiWidth)}%)
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded bg-[#F2B84B] block" />
-            <span className="text-parchment-300">Fantasy ({Math.round(fantasyWidth)}%)</span>
+            <span className="text-parchment-300">
+              Fantasy ({Math.round(fantasyWidth)}%)
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="w-3 h-3 rounded bg-[#C4881B] block" />
-            <span className="text-parchment-300">Fiction ({Math.round(fictionWidth)}%)</span>
+            <span className="text-parchment-300">
+              Fiction ({Math.round(fictionWidth)}%)
+            </span>
           </div>
         </div>
       </div>

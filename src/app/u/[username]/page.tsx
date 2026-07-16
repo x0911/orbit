@@ -38,7 +38,8 @@ export default async function ProfilePage({
   // 3. Fetch shelf items
   const { data: shelvesData } = await supabase
     .from("shelves")
-    .select(`
+    .select(
+      `
       id,
       status,
       current_page,
@@ -51,7 +52,8 @@ export default async function ProfilePage({
         genre,
         slug
       )
-    `)
+    `,
+    )
     .eq("user_id", profile.id)
     .order("updated_at", { ascending: false });
 
@@ -60,21 +62,23 @@ export default async function ProfilePage({
       id: string;
       status: string;
       current_page: number;
-      books: {
-        id: string;
-        title: string;
-        author: string;
-        cover_url: string | null;
-        page_count: number;
-        slug: string;
-      } | Array<{
-        id: string;
-        title: string;
-        author: string;
-        cover_url: string | null;
-        page_count: number;
-        slug: string;
-      }>;
+      books:
+        | {
+            id: string;
+            title: string;
+            author: string;
+            cover_url: string | null;
+            page_count: number;
+            slug: string;
+          }
+        | Array<{
+            id: string;
+            title: string;
+            author: string;
+            cover_url: string | null;
+            page_count: number;
+            slug: string;
+          }>;
     };
     const book = Array.isArray(s.books) ? s.books[0] : s.books;
     return {
@@ -103,7 +107,9 @@ export default async function ProfilePage({
   }
 
   // 5. Fetch current user session to show follow button
-  const { data: { user: currentUser } } = await supabase.auth.getUser();
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
   const isOwnProfile = currentUser?.id === profile.id;
 
   let isFollowing = false;
@@ -142,8 +148,14 @@ export default async function ProfilePage({
     const userRating = reviewMap[book.id];
 
     return (
-      <div key={item.id} className="bg-ink-900 border border-ink-800 rounded-xl p-4 flex gap-4 items-center">
-        <Link href={`/book/${book.slug}`} className="relative aspect-[2/3] w-16 shrink-0 rounded-lg overflow-hidden border border-ink-850 bg-ink-950 shadow">
+      <div
+        key={item.id}
+        className="bg-ink-900 border border-ink-800 rounded-xl p-4 flex gap-4 items-center"
+      >
+        <Link
+          href={`/book/${book.slug}`}
+          className="relative aspect-[2/3] w-16 shrink-0 rounded-lg overflow-hidden border border-ink-850 bg-ink-950 shadow"
+        >
           {book.cover_url ? (
             <Image
               src={book.cover_url}
@@ -153,7 +165,7 @@ export default async function ProfilePage({
               className="object-cover"
             />
           ) : (
-            <div className="absolute inset-0 p-1 flex items-center justify-center text-center font-serif text-[8px] text-parchment-500">
+            <div className="absolute inset-0 p-1 flex items-center justify-center text-center font-sans text-[8px] text-parchment-500">
               {book.title}
             </div>
           )}
@@ -162,20 +174,27 @@ export default async function ProfilePage({
         <div className="flex-1 min-w-0">
           <Link
             href={`/book/${book.slug}`}
-            className="font-serif font-bold text-sm text-parchment-100 hover:text-amber-500 transition-colors line-clamp-1 block"
+            className="font-sans font-bold text-sm text-parchment-100 hover:text-amber-500 transition-colors line-clamp-1 block"
           >
             {book.title}
           </Link>
-          <p className="text-xs text-parchment-500 line-clamp-1">by {book.author}</p>
-          
+          <p className="text-xs text-parchment-500 line-clamp-1">
+            by {book.author}
+          </p>
+
           {item.status === "reading" && (
             <div className="mt-2 space-y-1">
               <div className="flex justify-between text-[10px] text-parchment-500">
-                <span>Page {item.current_page} of {book.page_count}</span>
+                <span>
+                  Page {item.current_page} of {book.page_count}
+                </span>
                 <span>{progressPct}%</span>
               </div>
               <div className="w-full bg-ink-950 rounded-full h-1 overflow-hidden">
-                <div className="bg-amber-500 h-full" style={{ width: `${progressPct}%` }} />
+                <div
+                  className="bg-amber-500 h-full"
+                  style={{ width: `${progressPct}%` }}
+                />
               </div>
             </div>
           )}
@@ -205,12 +224,14 @@ export default async function ProfilePage({
 
           {/* Avatar circle (no emojis) */}
           <div className="w-24 h-24 rounded-full bg-ink-950 border border-ink-800 text-amber-500 flex items-center justify-center text-4xl uppercase font-bold tracking-wider shrink-0 shadow-lg">
-            {profile.display_name ? profile.display_name.charAt(0) : profile.username.charAt(0)}
+            {profile.display_name
+              ? profile.display_name.charAt(0)
+              : profile.username.charAt(0)}
           </div>
 
           <div className="flex-1 space-y-4 text-center md:text-left">
             <div>
-              <h1 className="font-serif text-3xl font-bold tracking-wide text-parchment-100">
+              <h1 className="font-sans text-3xl font-bold tracking-wide text-parchment-100">
                 {profile.display_name || profile.username}
               </h1>
               <p className="text-sm text-parchment-500">@{profile.username}</p>
@@ -226,11 +247,17 @@ export default async function ProfilePage({
             <div className="flex items-center justify-center md:justify-start gap-6 text-sm text-parchment-300">
               <div className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-amber-500" />
-                <span className="font-bold text-parchment-100">{followersCount}</span> followers
+                <span className="font-bold text-parchment-100">
+                  {followersCount}
+                </span>{" "}
+                followers
               </div>
               <div className="flex items-center gap-1.5">
                 <Users className="w-4 h-4 text-amber-500" />
-                <span className="font-bold text-parchment-100">{followingCount}</span> following
+                <span className="font-bold text-parchment-100">
+                  {followingCount}
+                </span>{" "}
+                following
               </div>
             </div>
           </div>
@@ -264,7 +291,7 @@ export default async function ProfilePage({
 
         {/* Public Book Shelf */}
         <div className="space-y-8">
-          <h2 className="font-serif text-2xl font-bold tracking-wide text-parchment-100 flex items-center gap-2">
+          <h2 className="font-sans text-2xl font-bold tracking-wide text-parchment-100 flex items-center gap-2">
             <BookOpen className="w-6 h-6 text-amber-500" />
             Library Shelf
           </h2>
@@ -277,7 +304,9 @@ export default async function ProfilePage({
                 <span>{reading.length}</span>
               </h3>
               {reading.length === 0 ? (
-                <p className="text-xs text-parchment-500 py-4">Not reading anything currently.</p>
+                <p className="text-xs text-parchment-500 py-4">
+                  Not reading anything currently.
+                </p>
               ) : (
                 <div className="space-y-3">{reading.map(renderBookItem)}</div>
               )}
@@ -290,7 +319,9 @@ export default async function ProfilePage({
                 <span>{finished.length}</span>
               </h3>
               {finished.length === 0 ? (
-                <p className="text-xs text-parchment-500 py-4">No books finished yet.</p>
+                <p className="text-xs text-parchment-500 py-4">
+                  No books finished yet.
+                </p>
               ) : (
                 <div className="space-y-3">{finished.map(renderBookItem)}</div>
               )}
@@ -303,9 +334,13 @@ export default async function ProfilePage({
                 <span>{wantToRead.length}</span>
               </h3>
               {wantToRead.length === 0 ? (
-                <p className="text-xs text-parchment-500 py-4">No books on wishlist.</p>
+                <p className="text-xs text-parchment-500 py-4">
+                  No books on wishlist.
+                </p>
               ) : (
-                <div className="space-y-3">{wantToRead.map(renderBookItem)}</div>
+                <div className="space-y-3">
+                  {wantToRead.map(renderBookItem)}
+                </div>
               )}
             </div>
           </div>

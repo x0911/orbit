@@ -29,7 +29,8 @@ export default function FeedView({
   initialActivities: FeedActivity[];
 }) {
   const router = useRouter();
-  const [activities, setActivities] = useState<FeedActivity[]>(initialActivities);
+  const [activities, setActivities] =
+    useState<FeedActivity[]>(initialActivities);
 
   // Sync state with server props
   useEffect(() => {
@@ -39,7 +40,7 @@ export default function FeedView({
   // Set up Supabase Realtime Listener
   useEffect(() => {
     const supabase = createClient();
-    
+
     // Listen for inserts or updates to trigger Next.js page re-fetch
     const channel = supabase
       .channel("friend-activity-channel")
@@ -48,14 +49,14 @@ export default function FeedView({
         { event: "*", schema: "public", table: "shelves" },
         () => {
           router.refresh();
-        }
+        },
       )
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "reading_logs" },
         () => {
           router.refresh();
-        }
+        },
       )
       .subscribe();
 
@@ -89,7 +90,7 @@ export default function FeedView({
               className="object-cover"
             />
           ) : (
-            <div className="absolute inset-0 p-1 flex items-center justify-center text-center font-serif text-[8px] text-parchment-500 bg-ink-900">
+            <div className="absolute inset-0 p-1 flex items-center justify-center text-center font-sans text-[8px] text-parchment-500 bg-ink-900">
               {act.bookTitle}
             </div>
           )}
@@ -99,40 +100,43 @@ export default function FeedView({
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-1.5 text-xs text-parchment-300">
-              <Link href={`/u/${act.username}`} className="font-bold text-parchment-100 hover:text-amber-500 transition-colors">
+              <Link
+                href={`/u/${act.username}`}
+                className="font-bold text-parchment-100 hover:text-amber-500 transition-colors"
+              >
                 {act.displayName}
               </Link>
-              
+
               {act.type === "pages_logged" && (
                 <span>
-                  logged <span className="font-semibold text-amber-500">{act.pagesRead} pages</span> of
+                  logged{" "}
+                  <span className="font-semibold text-amber-500">
+                    {act.pagesRead} pages
+                  </span>{" "}
+                  of
                 </span>
               )}
 
               {act.type === "status_update" && isFinished && (
-                <span>
-                  finished reading
-                </span>
+                <span>finished reading</span>
               )}
               {act.type === "status_update" && isReading && (
-                <span>
-                  started reading
-                </span>
+                <span>started reading</span>
               )}
               {act.type === "status_update" && isWishlist && (
-                <span>
-                  added to wishlist
-                </span>
+                <span>added to wishlist</span>
               )}
             </div>
 
             <Link
               href={`/book/${act.bookSlug}`}
-              className="font-serif font-bold text-sm text-parchment-100 hover:text-amber-500 transition-colors line-clamp-1 block"
+              className="font-sans font-bold text-sm text-parchment-100 hover:text-amber-500 transition-colors line-clamp-1 block"
             >
               {act.bookTitle}
             </Link>
-            <p className="text-[10px] text-parchment-500">by {act.bookAuthor}</p>
+            <p className="text-[10px] text-parchment-500">
+              by {act.bookAuthor}
+            </p>
 
             {/* Special display for ratings */}
             {act.type === "status_update" && isFinished && act.ratingValue && (
@@ -173,7 +177,8 @@ export default function FeedView({
         <div className="text-center py-16 rounded-xl bg-ink-900 border border-ink-850 border-dashed">
           <Activity className="w-8 h-8 text-parchment-500 mx-auto mb-4 opacity-50" />
           <p className="text-parchment-500 text-sm">
-            No activity in your feed. Follow other readers to see their reading progress!
+            No activity in your feed. Follow other readers to see their reading
+            progress!
           </p>
         </div>
       ) : (

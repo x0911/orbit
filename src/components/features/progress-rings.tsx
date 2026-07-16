@@ -17,9 +17,30 @@ interface RingData {
 }
 
 const booksData: RingData[] = [
-  { title: "The Odyssey", author: "Homer", percentage: 85, currentPage: 340, totalPages: 400, color: "#E6A62E" },
-  { title: "Neuromancer", author: "William Gibson", percentage: 50, currentPage: 150, totalPages: 300, color: "#F2B84B" },
-  { title: "1984", author: "George Orwell", percentage: 20, currentPage: 40, totalPages: 200, color: "#C4881B" },
+  {
+    title: "The Odyssey",
+    author: "Homer",
+    percentage: 85,
+    currentPage: 340,
+    totalPages: 400,
+    color: "#E6A62E",
+  },
+  {
+    title: "Neuromancer",
+    author: "William Gibson",
+    percentage: 50,
+    currentPage: 150,
+    totalPages: 300,
+    color: "#F2B84B",
+  },
+  {
+    title: "1984",
+    author: "George Orwell",
+    percentage: 20,
+    currentPage: 40,
+    totalPages: 200,
+    color: "#C4881B",
+  },
 ];
 
 // Circle dimensions (radius = 45, circumference = 2 * PI * 45 = 282.74)
@@ -51,7 +72,8 @@ export default function ProgressRings() {
 
       ringRefs.forEach((ring, i) => {
         if (ring) {
-          const targetOffset = circumference * (1 - booksData[i].percentage / 100);
+          const targetOffset =
+            circumference * (1 - booksData[i].percentage / 100);
           ring.style.strokeDashoffset = targetOffset.toString();
         }
       });
@@ -90,13 +112,14 @@ export default function ProgressRings() {
           setVal3(Math.round(numbersObj.count3));
         },
       },
-      0
+      0,
     );
 
     // 2. Animate SVG stroke offsets (staggered)
     ringRefs.forEach((ring, i) => {
       if (ring) {
-        const targetOffset = circumference * (1 - booksData[i].percentage / 100);
+        const targetOffset =
+          circumference * (1 - booksData[i].percentage / 100);
         timeline.to(
           ring,
           {
@@ -104,7 +127,7 @@ export default function ProgressRings() {
             duration: 1.2,
             ease: "power2.out",
           },
-          i * 0.25 // Stagger ring fillings
+          i * 0.25, // Stagger ring fillings
         );
       }
     });
@@ -133,7 +156,10 @@ export default function ProgressRings() {
           >
             {/* SVG Ring Container */}
             <div className="relative w-28 h-28 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 110 110">
+              <svg
+                className="w-full h-full transform -rotate-90"
+                viewBox="0 0 110 110"
+              >
                 {/* Background track circle */}
                 <circle
                   cx="55"
@@ -166,12 +192,13 @@ export default function ProgressRings() {
 
             {/* Book Details */}
             <div className="mt-5 text-center space-y-1.5">
-              <h3 className="font-serif font-bold text-sm text-parchment-100 line-clamp-1">
+              <h3 className="font-sans font-bold text-sm text-parchment-100 line-clamp-1">
                 {book.title}
               </h3>
               <p className="text-[11px] text-parchment-500">by {book.author}</p>
               <div className="text-[10px] text-amber-500 font-semibold px-2 py-0.5 rounded bg-amber-500/5 border border-amber-500/10 inline-block">
-                Page {Math.round((displayVal / 100) * book.totalPages)} of {book.totalPages}
+                Page {Math.round((displayVal / 100) * book.totalPages)} of{" "}
+                {book.totalPages}
               </div>
             </div>
           </div>

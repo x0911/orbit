@@ -1,9 +1,20 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ChevronLeft, Plus, Trash2, Calendar, BookOpen, PenTool } from "lucide-react";
+import {
+  ChevronLeft,
+  Plus,
+  Trash2,
+  Calendar,
+  BookOpen,
+  PenTool,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { logProgress, saveReview, removeFromShelf } from "@/app/app/shelf/actions";
+import {
+  logProgress,
+  saveReview,
+  removeFromShelf,
+} from "@/app/app/shelf/actions";
 import InteractiveStars from "@/components/features/interactive-stars";
 
 interface ReadingLog {
@@ -22,7 +33,9 @@ export default async function AuthenticatedBookPage({
   const supabase = await createClient();
 
   // 1. Fetch current user session (already verified in app layout, but needed for querying)
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     redirect("/login");
   }
@@ -41,13 +54,15 @@ export default async function AuthenticatedBookPage({
   // 3. Fetch user shelf info for this book
   const { data: shelf } = await supabase
     .from("shelves")
-    .select(`
+    .select(
+      `
       id,
       status,
       current_page,
       started_at,
       finished_at
-    `)
+    `,
+    )
     .eq("user_id", user.id)
     .eq("book_id", book.id)
     .maybeSingle();
@@ -97,9 +112,10 @@ export default async function AuthenticatedBookPage({
     }
   };
 
-  const progressPercent = shelf && book.page_count
-    ? Math.min(100, Math.round((shelf.current_page / book.page_count) * 100))
-    : 0;
+  const progressPercent =
+    shelf && book.page_count
+      ? Math.min(100, Math.round((shelf.current_page / book.page_count) * 100))
+      : 0;
 
   return (
     <main className="text-parchment-100 min-h-screen pb-12">
@@ -125,7 +141,7 @@ export default async function AuthenticatedBookPage({
                 className="object-cover"
               />
             ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-parchment-500 text-sm font-serif p-4 text-center">
+              <div className="absolute inset-0 flex items-center justify-center text-parchment-500 text-sm font-sans p-4 text-center">
                 {book.title}
               </div>
             )}
@@ -135,7 +151,7 @@ export default async function AuthenticatedBookPage({
             <span className="inline-block text-[10px] uppercase font-bold tracking-widest px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
               {book.genre}
             </span>
-            <h1 className="font-serif text-2xl md:text-3xl font-bold tracking-wide text-parchment-100 mb-2 leading-tight">
+            <h1 className="font-sans text-2xl md:text-3xl font-bold tracking-wide text-parchment-100 mb-2 leading-tight">
               {book.title}
             </h1>
             <p className="text-parchment-300 mb-4">by {book.author}</p>
@@ -164,7 +180,8 @@ export default async function AuthenticatedBookPage({
             <div className="p-8 rounded-xl bg-ink-900 border border-ink-800 text-center">
               <h2 className="text-lg font-semibold mb-2">Book Not on Shelf</h2>
               <p className="text-sm text-parchment-500 mb-6">
-                Add this book to your shelf to start tracking your reading progress.
+                Add this book to your shelf to start tracking your reading
+                progress.
               </p>
               <Link
                 href={`/book/${book.slug}`}
@@ -184,7 +201,9 @@ export default async function AuthenticatedBookPage({
                       <BookOpen className="w-5 h-5" />
                     </div>
                     <div>
-                      <h2 className="text-lg font-semibold">Reading Progress</h2>
+                      <h2 className="text-lg font-semibold">
+                        Reading Progress
+                      </h2>
                       <p className="text-xs text-parchment-500 capitalize">
                         Status: {shelf.status.replace(/_/g, " ")}
                       </p>
@@ -210,9 +229,15 @@ export default async function AuthenticatedBookPage({
                 </div>
 
                 {shelf.status !== "finished" && (
-                  <form action={handleLogProgress} className="pt-4 border-t border-ink-850 flex flex-col md:flex-row items-end gap-4">
+                  <form
+                    action={handleLogProgress}
+                    className="pt-4 border-t border-ink-850 flex flex-col md:flex-row items-end gap-4"
+                  >
                     <div className="flex-1 w-full text-left">
-                      <label htmlFor="pages-input" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+                      <label
+                        htmlFor="pages-input"
+                        className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+                      >
                         Log Pages Read
                       </label>
                       <input
@@ -252,14 +277,23 @@ export default async function AuthenticatedBookPage({
 
                 <form action={handleSaveReview} className="space-y-4">
                   <div className="text-left">
-                    <label htmlFor="rating-select" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+                    <label
+                      htmlFor="rating-select"
+                      className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+                    >
                       Star Rating
                     </label>
-                    <InteractiveStars name="rating" defaultValue={review?.rating || 5} />
+                    <InteractiveStars
+                      name="rating"
+                      defaultValue={review?.rating || 5}
+                    />
                   </div>
 
                   <div className="text-left">
-                    <label htmlFor="review-body" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+                    <label
+                      htmlFor="review-body"
+                      className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+                    >
                       Review Comments
                     </label>
                     <textarea
@@ -283,7 +317,9 @@ export default async function AuthenticatedBookPage({
 
               {/* Progress History Logs */}
               <div className="p-8 rounded-xl bg-ink-900 border border-ink-800 space-y-6">
-                <h3 className="text-base font-semibold">Reading Logs History</h3>
+                <h3 className="text-base font-semibold">
+                  Reading Logs History
+                </h3>
                 {readingLogs.length === 0 ? (
                   <p className="text-sm text-parchment-500">
                     No reading logs submitted yet.
@@ -297,9 +333,7 @@ export default async function AuthenticatedBookPage({
                       >
                         <div className="flex items-center gap-2 text-parchment-300">
                           <Calendar className="w-4 h-4 text-parchment-500" />
-                          <span>
-                            Logged {log.pages_read} pages
-                          </span>
+                          <span>Logged {log.pages_read} pages</span>
                         </div>
                         <span className="text-xs text-parchment-500">
                           {new Date(log.logged_at).toLocaleDateString()}{" "}

@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Star, Share2, ChevronLeft, ChevronRight, Award, BookOpen, Layers, Flame } from "lucide-react";
+import {
+  Star,
+  Share2,
+  ChevronLeft,
+  ChevronRight,
+  Award,
+  BookOpen,
+  Layers,
+  Flame,
+} from "lucide-react";
 import gsap from "gsap";
 import SplitText from "@/components/SplitText";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
@@ -43,7 +52,14 @@ export default function WrappedView({
   const slidesContainerRef = useRef<HTMLDivElement>(null);
 
   // Color palette for genre slices
-  const genreColors = ["#E6A62E", "#F2B84B", "#C4881B", "#9C8F7A", "#D8CCB8", "#1E1B18"];
+  const genreColors = [
+    "#E6A62E",
+    "#F2B84B",
+    "#C4881B",
+    "#9C8F7A",
+    "#D8CCB8",
+    "#1E1B18",
+  ];
 
   // 1. Handle counting animation when Slide 1 (the stats card) is visible
   useEffect(() => {
@@ -95,7 +111,7 @@ export default function WrappedView({
       if (slice) {
         const pct = gen.count / totalGenreCount;
         const targetLength = circumference * pct;
-        
+
         timeline.to(
           slice,
           {
@@ -103,7 +119,7 @@ export default function WrappedView({
             duration: 0.8,
             ease: "power2.out",
           },
-          index * 0.25 // staggered segment drawings
+          index * 0.25, // staggered segment drawings
         );
       }
     });
@@ -111,7 +127,13 @@ export default function WrappedView({
     return () => {
       timeline.kill();
     };
-  }, [activeSlide, genres, totalGenreCount, circumference, prefersReducedMotion]);
+  }, [
+    activeSlide,
+    genres,
+    totalGenreCount,
+    circumference,
+    prefersReducedMotion,
+  ]);
 
   // Handle Share link copying
   const handleShare = () => {
@@ -143,9 +165,7 @@ export default function WrappedView({
           <span className="text-[10px] uppercase font-bold tracking-widest text-amber-500">
             {year} WRAPPED
           </span>
-          <span className="text-xs text-parchment-500">
-            @{username}
-          </span>
+          <span className="text-xs text-parchment-500">@{username}</span>
         </div>
 
         <button
@@ -176,7 +196,7 @@ export default function WrappedView({
             <div className="space-y-2">
               <SplitText
                 text={`${year} Reading Wrapped`}
-                className="font-serif text-3xl font-bold tracking-wide text-parchment-100"
+                className="font-sans text-3xl font-bold tracking-wide text-parchment-100"
                 splitType="words"
                 delay={60}
               />
@@ -196,7 +216,9 @@ export default function WrappedView({
               <span className="text-[10px] uppercase font-bold tracking-widest text-amber-500">
                 LITERARY VOLUME
               </span>
-              <h3 className="font-serif text-2xl font-bold">The Year in Numbers</h3>
+              <h3 className="font-sans text-2xl font-bold">
+                The Year in Numbers
+              </h3>
             </div>
 
             <div className="space-y-6 w-full max-w-[280px]">
@@ -205,9 +227,13 @@ export default function WrappedView({
                   <div className="w-9 h-9 rounded-lg bg-ink-900 border border-ink-800 text-amber-500 flex items-center justify-center">
                     <BookOpen className="w-4 h-4" />
                   </div>
-                  <span className="text-xs font-semibold text-parchment-300">Books Finished</span>
+                  <span className="text-xs font-semibold text-parchment-300">
+                    Books Finished
+                  </span>
                 </div>
-                <span className="font-serif text-2xl font-bold text-amber-500">{dispBooks}</span>
+                <span className="font-sans text-2xl font-bold text-amber-500">
+                  {dispBooks}
+                </span>
               </div>
 
               <div className="bg-ink-950/65 border border-ink-850 p-5 rounded-2xl flex items-center justify-between">
@@ -215,9 +241,11 @@ export default function WrappedView({
                   <div className="w-9 h-9 rounded-lg bg-ink-900 border border-ink-800 text-amber-500 flex items-center justify-center">
                     <Flame className="w-4 h-4" />
                   </div>
-                  <span className="text-xs font-semibold text-parchment-300">Pages Logged</span>
+                  <span className="text-xs font-semibold text-parchment-300">
+                    Pages Logged
+                  </span>
                 </div>
-                <span className="font-serif text-2xl font-bold text-amber-500">
+                <span className="font-sans text-2xl font-bold text-amber-500">
                   {dispPages.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </span>
               </div>
@@ -232,24 +260,39 @@ export default function WrappedView({
               <span className="text-[10px] uppercase font-bold tracking-widest text-amber-500">
                 GENRE LANDSCAPE
               </span>
-              <h3 className="font-serif text-2xl font-bold">Your Preferred Spheres</h3>
+              <h3 className="font-sans text-2xl font-bold">
+                Your Preferred Spheres
+              </h3>
             </div>
 
             {genres.length === 0 ? (
-              <p className="text-xs text-parchment-500 py-8">No books finished yet to map genres.</p>
+              <p className="text-xs text-parchment-500 py-8">
+                No books finished yet to map genres.
+              </p>
             ) : (
               <div className="flex flex-col md:flex-row items-center gap-6 w-full max-w-[340px]">
                 {/* SVG Circular Donut Chart */}
                 <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r={radius} className="stroke-ink-950 fill-none" strokeWidth="8" />
-                    
+                  <svg
+                    className="w-full h-full transform -rotate-90"
+                    viewBox="0 0 100 100"
+                  >
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r={radius}
+                      className="stroke-ink-950 fill-none"
+                      strokeWidth="8"
+                    />
+
                     {genres.map((gen, i) => {
                       const color = genreColors[i % genreColors.length];
                       const pct = gen.count / totalGenreCount;
                       const dashOffset = circumference * (1 - accumulatedPct);
-                      const targetLength = prefersReducedMotion ? circumference * pct : 0;
-                      
+                      const targetLength = prefersReducedMotion
+                        ? circumference * pct
+                        : 0;
+
                       accumulatedPct += pct;
 
                       return (
@@ -263,7 +306,11 @@ export default function WrappedView({
                           r={radius}
                           stroke={color}
                           strokeWidth="8"
-                          strokeDasharray={prefersReducedMotion ? `${targetLength} ${circumference}` : `0 ${circumference}`}
+                          strokeDasharray={
+                            prefersReducedMotion
+                              ? `${targetLength} ${circumference}`
+                              : `0 ${circumference}`
+                          }
                           strokeDashoffset={-dashOffset}
                           className="fill-none transition-all duration-75"
                           strokeLinecap="butt"
@@ -280,14 +327,26 @@ export default function WrappedView({
                 <div className="flex-1 w-full space-y-2 text-left">
                   {genres.slice(0, 4).map((gen, i) => {
                     const color = genreColors[i % genreColors.length];
-                    const pctVal = Math.round((gen.count / totalGenreCount) * 100);
+                    const pctVal = Math.round(
+                      (gen.count / totalGenreCount) * 100,
+                    );
                     return (
-                      <div key={gen.genre} className="flex items-center justify-between text-xs">
+                      <div
+                        key={gen.genre}
+                        className="flex items-center justify-between text-xs"
+                      >
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-2.5 h-2.5 rounded shrink-0 block" style={{ backgroundColor: color }} />
-                          <span className="text-parchment-300 truncate font-medium">{gen.genre}</span>
+                          <span
+                            className="w-2.5 h-2.5 rounded shrink-0 block"
+                            style={{ backgroundColor: color }}
+                          />
+                          <span className="text-parchment-300 truncate font-medium">
+                            {gen.genre}
+                          </span>
                         </div>
-                        <span className="font-bold text-parchment-100">{pctVal}%</span>
+                        <span className="font-bold text-parchment-100">
+                          {pctVal}%
+                        </span>
                       </div>
                     );
                   })}
@@ -304,13 +363,15 @@ export default function WrappedView({
               <span className="text-[10px] uppercase font-bold tracking-widest text-amber-500">
                 CRITICAL LENS
               </span>
-              <h3 className="font-serif text-2xl font-bold">Average Year Score</h3>
+              <h3 className="font-sans text-2xl font-bold">
+                Average Year Score
+              </h3>
             </div>
 
             {averageRating ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-center gap-2">
-                  <span className="font-serif text-6xl font-black text-amber-500">
+                  <span className="font-sans text-6xl font-black text-amber-500">
                     {averageRating.toFixed(1)}
                   </span>
                   <div className="flex flex-col items-start">
@@ -319,7 +380,9 @@ export default function WrappedView({
                         <Star
                           key={star}
                           className={`w-4 h-4 ${
-                            star <= Math.round(averageRating) ? "fill-current" : "opacity-25"
+                            star <= Math.round(averageRating)
+                              ? "fill-current"
+                              : "opacity-25"
                           }`}
                         />
                       ))}
@@ -330,7 +393,8 @@ export default function WrappedView({
                   </div>
                 </div>
                 <p className="text-xs text-parchment-500 max-w-[240px] mx-auto leading-relaxed">
-                  Your taste index for the year. Thanks for tracking your reading journey with Orbit!
+                  Your taste index for the year. Thanks for tracking your
+                  reading journey with Orbit!
                 </p>
               </div>
             ) : (

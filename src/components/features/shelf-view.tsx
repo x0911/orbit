@@ -6,7 +6,11 @@ import Link from "next/link";
 import { Star, Trash2, Edit3, X, ArrowRight } from "lucide-react";
 import TiltedCard from "@/components/TiltedCard";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { logProgress, saveReview, removeFromShelf } from "@/app/app/shelf/actions";
+import {
+  logProgress,
+  saveReview,
+  removeFromShelf,
+} from "@/app/app/shelf/actions";
 
 interface ShelfItem {
   id: string;
@@ -32,7 +36,8 @@ export default function ShelfView({
 }) {
   const prefersReducedMotion = useReducedMotion();
   const [shelves, setShelves] = useState<ShelfItem[]>(initialShelves);
-  const [reviewMap, setReviewMap] = useState<Record<string, number>>(initialReviewMap);
+  const [reviewMap, setReviewMap] =
+    useState<Record<string, number>>(initialReviewMap);
   const [selectedItem, setSelectedItem] = useState<ShelfItem | null>(null);
 
   // Form states in modal
@@ -94,10 +99,12 @@ export default function ShelfView({
     if (!modal) return;
 
     const focusableElements = modal.querySelectorAll(
-      'button, [href], input, select, textarea, [tabindex="0"]'
+      'button, [href], input, select, textarea, [tabindex="0"]',
     );
     const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
 
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return;
@@ -151,7 +158,7 @@ export default function ShelfView({
     if (res.success) {
       setActionSuccess("Pages logged successfully!");
       setPagesLogValue("");
-      
+
       // Update local state instantly
       const updatedShelves = shelves.map((s) => {
         if (s.id === selectedItem.id) {
@@ -160,13 +167,15 @@ export default function ShelfView({
           return {
             ...s,
             current_page: newPage,
-            status: (isFinished ? "finished" : "reading") as "reading" | "finished",
+            status: (isFinished ? "finished" : "reading") as
+              | "reading"
+              | "finished",
           };
         }
         return s;
       });
       setShelves(updatedShelves);
-      
+
       // Update active selected item
       const active = updatedShelves.find((s) => s.id === selectedItem.id);
       if (active) setSelectedItem(active);
@@ -183,10 +192,17 @@ export default function ShelfView({
     setActionError("");
     setActionSuccess("");
 
-    const res = await saveReview(selectedItem.books.id, reviewRating, reviewBody);
+    const res = await saveReview(
+      selectedItem.books.id,
+      reviewRating,
+      reviewBody,
+    );
     if (res.success) {
       setActionSuccess("Review saved successfully!");
-      setReviewMap((prev) => ({ ...prev, [selectedItem.books.id]: reviewRating }));
+      setReviewMap((prev) => ({
+        ...prev,
+        [selectedItem.books.id]: reviewRating,
+      }));
     } else {
       setActionError(res.error || "Failed to save review");
     }
@@ -195,7 +211,10 @@ export default function ShelfView({
   // Handle remove book
   const handleRemoveBook = async () => {
     if (!selectedItem) return;
-    if (!confirm(`Are you sure you want to remove "${selectedItem.books.title}"?`)) return;
+    if (
+      !confirm(`Are you sure you want to remove "${selectedItem.books.title}"?`)
+    )
+      return;
 
     const res = await removeFromShelf(selectedItem.id);
     if (res.success) {
@@ -230,7 +249,7 @@ export default function ShelfView({
                   className="object-cover"
                 />
               ) : (
-                <div className="absolute inset-0 p-3 flex items-center justify-center text-center font-serif text-xs text-parchment-500">
+                <div className="absolute inset-0 p-3 flex items-center justify-center text-center font-sans text-xs text-parchment-500">
                   {book.title}
                 </div>
               )}
@@ -259,7 +278,10 @@ export default function ShelfView({
                 <span>{progressPct}%</span>
               </div>
               <div className="w-full bg-ink-800 rounded-full h-1 overflow-hidden">
-                <div className="bg-amber-500 h-full" style={{ width: `${progressPct}%` }} />
+                <div
+                  className="bg-amber-500 h-full"
+                  style={{ width: `${progressPct}%` }}
+                />
               </div>
             </div>
           )}
@@ -273,10 +295,12 @@ export default function ShelfView({
         </button>
 
         <div className="mt-3 text-center w-full px-2">
-          <h4 className="font-serif font-bold text-xs text-parchment-100 line-clamp-1 group-hover:text-amber-400 transition-colors">
+          <h4 className="font-sans font-bold text-xs text-parchment-100 line-clamp-1 group-hover:text-amber-400 transition-colors">
             {book.title}
           </h4>
-          <p className="text-[10px] text-parchment-500 line-clamp-1">{book.author}</p>
+          <p className="text-[10px] text-parchment-500 line-clamp-1">
+            {book.author}
+          </p>
         </div>
       </div>
     );
@@ -290,7 +314,7 @@ export default function ShelfView({
         <section className="bg-ink-900 border border-ink-800 rounded-2xl p-6 min-h-[400px] flex flex-col shadow-xl">
           <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ink-850">
             <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(230,166,46,0.5)] animate-pulse" />
-            <h2 className="font-serif text-lg font-bold">Currently Reading</h2>
+            <h2 className="font-sans text-lg font-bold">Currently Reading</h2>
             <span className="text-xs bg-ink-950 px-2 py-0.5 rounded text-parchment-500 border border-ink-850 ml-auto">
               {reading.length}
             </span>
@@ -299,7 +323,8 @@ export default function ShelfView({
           {reading.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
               <p className="text-sm text-parchment-500 max-w-xs mb-4">
-                No books here. Discover new reads or move a book here to start tracking!
+                No books here. Discover new reads or move a book here to start
+                tracking!
               </p>
               <Link
                 href="/discover"
@@ -320,7 +345,7 @@ export default function ShelfView({
         <section className="bg-ink-900 border border-ink-800 rounded-2xl p-6 min-h-[400px] flex flex-col shadow-xl">
           <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ink-850">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-            <h2 className="font-serif text-lg font-bold">Finished</h2>
+            <h2 className="font-sans text-lg font-bold">Finished</h2>
             <span className="text-xs bg-ink-950 px-2 py-0.5 rounded text-parchment-500 border border-ink-850 ml-auto">
               {finished.length}
             </span>
@@ -341,7 +366,7 @@ export default function ShelfView({
         <section className="bg-ink-900 border border-ink-800 rounded-2xl p-6 min-h-[400px] flex flex-col shadow-xl">
           <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ink-850">
             <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-            <h2 className="font-serif text-lg font-bold">Want to Read</h2>
+            <h2 className="font-sans text-lg font-bold">Want to Read</h2>
             <span className="text-xs bg-ink-950 px-2 py-0.5 rounded text-parchment-500 border border-ink-850 ml-auto">
               {wantToRead.length}
             </span>
@@ -394,16 +419,21 @@ export default function ShelfView({
                       className="object-cover"
                     />
                   ) : (
-                    <div className="absolute inset-0 p-2 flex items-center justify-center text-center font-serif text-[10px] text-parchment-500 bg-ink-900">
+                    <div className="absolute inset-0 p-2 flex items-center justify-center text-center font-sans text-[10px] text-parchment-500 bg-ink-900">
                       {selectedItem.books.title}
                     </div>
                   )}
                 </div>
                 <div>
-                  <h3 id="modal-title" className="font-serif font-bold text-sm text-parchment-100 line-clamp-2">
+                  <h3
+                    id="modal-title"
+                    className="font-sans font-bold text-sm text-parchment-100 line-clamp-2"
+                  >
                     {selectedItem.books.title}
                   </h3>
-                  <p className="text-[10px] text-parchment-500 mt-1">by {selectedItem.books.author}</p>
+                  <p className="text-[10px] text-parchment-500 mt-1">
+                    by {selectedItem.books.author}
+                  </p>
                 </div>
               </div>
 
@@ -445,7 +475,15 @@ export default function ShelfView({
                 <div className="flex justify-between items-center text-sm font-semibold">
                   <span>Reading Progress</span>
                   <span className="text-amber-500 font-bold">
-                    {Math.min(100, Math.round((selectedItem.current_page / selectedItem.books.page_count) * 100))}%
+                    {Math.min(
+                      100,
+                      Math.round(
+                        (selectedItem.current_page /
+                          selectedItem.books.page_count) *
+                          100,
+                      ),
+                    )}
+                    %
                   </span>
                 </div>
                 <div className="w-full bg-ink-950 rounded-full h-2 overflow-hidden border border-ink-850">
@@ -457,7 +495,8 @@ export default function ShelfView({
                   />
                 </div>
                 <p className="text-xs text-parchment-500">
-                  Currently at page {selectedItem.current_page} of {selectedItem.books.page_count}
+                  Currently at page {selectedItem.current_page} of{" "}
+                  {selectedItem.books.page_count}
                 </p>
 
                 {selectedItem.status !== "finished" && (
@@ -465,7 +504,10 @@ export default function ShelfView({
                     <input
                       type="number"
                       min={1}
-                      max={selectedItem.books.page_count - selectedItem.current_page}
+                      max={
+                        selectedItem.books.page_count -
+                        selectedItem.current_page
+                      }
                       required
                       value={pagesLogValue}
                       onChange={(e) => setPagesLogValue(e.target.value)}
@@ -498,7 +540,10 @@ export default function ShelfView({
                         if (e.key === "ArrowRight" || e.key === "ArrowUp") {
                           e.preventDefault();
                           setReviewRating((r) => Math.min(5, r + 1));
-                        } else if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+                        } else if (
+                          e.key === "ArrowLeft" ||
+                          e.key === "ArrowDown"
+                        ) {
                           e.preventDefault();
                           setReviewRating((r) => Math.max(1, r - 1));
                         }
@@ -516,7 +561,9 @@ export default function ShelfView({
                         >
                           <Star
                             className={`w-6 h-6 transition-all ${
-                              star <= reviewRating ? "fill-current" : "opacity-20 hover:opacity-50"
+                              star <= reviewRating
+                                ? "fill-current"
+                                : "opacity-20 hover:opacity-50"
                             }`}
                           />
                         </button>
@@ -525,7 +572,10 @@ export default function ShelfView({
                   </div>
 
                   <div>
-                    <label htmlFor="modal-review-body" className="block text-[10px] font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+                    <label
+                      htmlFor="modal-review-body"
+                      className="block text-[10px] font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+                    >
                       Review Comments
                     </label>
                     <textarea

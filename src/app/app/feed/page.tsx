@@ -23,7 +23,10 @@ interface FeedItem {
 export default async function FeedPage() {
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (authError || !user) {
     redirect("/login");
   }
@@ -50,7 +53,8 @@ export default async function FeedPage() {
     // Fetch shelves changes for followed users
     const { data: shelvesUpdates } = await supabase
       .from("shelves")
-      .select(`
+      .select(
+        `
         id,
         status,
         user_id,
@@ -66,7 +70,8 @@ export default async function FeedPage() {
           cover_url,
           slug
         )
-      `)
+      `,
+      )
       .in("user_id", followedIds)
       .order("updated_at", { ascending: false })
       .limit(25);
@@ -74,7 +79,8 @@ export default async function FeedPage() {
     // Fetch reading logs for followed users
     const { data: logsUpdates } = await supabase
       .from("reading_logs")
-      .select(`
+      .select(
+        `
         id,
         pages_read,
         logged_at,
@@ -91,7 +97,8 @@ export default async function FeedPage() {
             slug
           )
         )
-      `)
+      `,
+      )
       .in("shelves.user_id", followedIds)
       .order("logged_at", { ascending: false })
       .limit(25);
@@ -109,19 +116,25 @@ export default async function FeedPage() {
       });
     }
 
-
-
     const feedItems: FeedItem[] = [];
 
     if (shelvesUpdates) {
-      (shelvesUpdates as unknown as Array<{
-        id: string;
-        status: string;
-        user_id: string;
-        updated_at: string;
-        profiles: { username: string; display_name: string | null } | null;
-        books: { id: string; title: string; author: string; cover_url: string | null; slug: string } | null;
-      }>).forEach((item) => {
+      (
+        shelvesUpdates as unknown as Array<{
+          id: string;
+          status: string;
+          user_id: string;
+          updated_at: string;
+          profiles: { username: string; display_name: string | null } | null;
+          books: {
+            id: string;
+            title: string;
+            author: string;
+            cover_url: string | null;
+            slug: string;
+          } | null;
+        }>
+      ).forEach((item) => {
         const profile = item.profiles;
         const book = item.books;
         if (!profile || !book) return;
@@ -146,16 +159,23 @@ export default async function FeedPage() {
     }
 
     if (logsUpdates) {
-      (logsUpdates as unknown as Array<{
-        id: string;
-        pages_read: number;
-        logged_at: string;
-        shelves: {
-          user_id: string;
-          profiles: { username: string; display_name: string | null } | null;
-          books: { title: string; author: string; cover_url: string | null; slug: string } | null;
-        } | null;
-      }>).forEach((item) => {
+      (
+        logsUpdates as unknown as Array<{
+          id: string;
+          pages_read: number;
+          logged_at: string;
+          shelves: {
+            user_id: string;
+            profiles: { username: string; display_name: string | null } | null;
+            books: {
+              title: string;
+              author: string;
+              cover_url: string | null;
+              slug: string;
+            } | null;
+          } | null;
+        }>
+      ).forEach((item) => {
         const shelf = item.shelves;
         if (!shelf) return;
         const profile = shelf.profiles;
@@ -178,7 +198,8 @@ export default async function FeedPage() {
     }
 
     feedItems.sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
     );
 
     finalFeed = feedItems.slice(0, 25);
@@ -188,18 +209,22 @@ export default async function FeedPage() {
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
       <div className="lg:col-span-2 space-y-8">
         <div>
-          <h1 className="font-serif text-3xl font-bold tracking-wide text-parchment-100">
+          <h1 className="font-sans text-3xl font-bold tracking-wide text-parchment-100">
             Friend Feed
           </h1>
           <p className="text-sm text-parchment-500 mt-1">
-            See what books your friends are exploring and how their reading journeys are progressing.
+            See what books your friends are exploring and how their reading
+            journeys are progressing.
           </p>
         </div>
         <FeedView initialActivities={finalFeed} />
       </div>
 
       <div className="lg:col-span-1">
-        <CommunityFollow profiles={allProfiles || []} initialFollowedIds={followedIds} />
+        <CommunityFollow
+          profiles={allProfiles || []}
+          initialFollowedIds={followedIds}
+        />
       </div>
     </div>
   );

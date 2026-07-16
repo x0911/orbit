@@ -35,7 +35,7 @@ export default function Nav({
           <div className="w-10 h-10 rounded-full bg-ink-950 border border-ink-800 text-amber-500 flex items-center justify-center shadow-[0_0_10px_rgba(230,166,46,0.05)] group-hover:shadow-[0_0_15px_rgba(230,166,46,0.2)] transition-all">
             <BookOpen className="w-5 h-5" />
           </div>
-          <span className="font-serif text-xl font-bold tracking-wide text-parchment-100 group-hover:text-amber-400 transition-colors">
+          <span className="font-sans text-xl font-bold tracking-wide text-parchment-100 group-hover:text-amber-400 transition-colors">
             Orbit
           </span>
         </Link>
@@ -93,7 +93,11 @@ export default function Nav({
           aria-label="Toggle Menu"
           className="md:hidden p-2 rounded-lg text-parchment-500 hover:text-parchment-100 bg-ink-950 border border-ink-800 focus:outline-none"
         >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          {mobileMenuOpen ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <Menu className="w-5 h-5" />
+          )}
         </button>
       </div>
 
@@ -131,9 +135,7 @@ export default function Nav({
                 <span className="text-sm font-semibold text-parchment-100">
                   {displayName || username}
                 </span>
-                <span className="text-xs text-parchment-500">
-                  @{username}
-                </span>
+                <span className="text-xs text-parchment-500">@{username}</span>
               </div>
             </div>
 

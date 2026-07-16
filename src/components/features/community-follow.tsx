@@ -48,7 +48,7 @@ export default function CommunityFollow({
   return (
     <div className="bg-ink-900 border border-ink-850 rounded-2xl p-5 space-y-4 shadow-lg sticky top-8">
       <div>
-        <h3 className="font-serif text-lg font-bold text-parchment-100">
+        <h3 className="font-sans text-lg font-bold text-parchment-100">
           Find Readers
         </h3>
         <p className="text-xs text-parchment-500">
@@ -70,7 +70,9 @@ export default function CommunityFollow({
 
       <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
         {filteredProfiles.length === 0 ? (
-          <p className="text-xs text-parchment-500 text-center py-4">No readers found.</p>
+          <p className="text-xs text-parchment-500 text-center py-4">
+            No readers found.
+          </p>
         ) : (
           filteredProfiles.map((p) => {
             const isFollowing = followedIds.includes(p.id);

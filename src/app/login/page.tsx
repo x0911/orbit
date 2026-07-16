@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { BookOpen, Key, Mail, Lock, ShieldAlert, CheckCircle } from "lucide-react";
+import {
+  BookOpen,
+  Key,
+  Mail,
+  Lock,
+  ShieldAlert,
+  CheckCircle,
+} from "lucide-react";
 import { login, loginDemo } from "./actions";
 
 export default async function LoginPage({
@@ -9,7 +16,8 @@ export default async function LoginPage({
 }) {
   const params = await searchParams;
   const error = typeof params.error === "string" ? params.error : undefined;
-  const message = typeof params.message === "string" ? params.message : undefined;
+  const message =
+    typeof params.message === "string" ? params.message : undefined;
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-ink-950 px-4 py-12 relative overflow-hidden">
@@ -22,7 +30,7 @@ export default async function LoginPage({
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-ink-900 border border-ink-800 text-amber-500 mb-4 shadow-[0_0_15px_rgba(230,166,46,0.1)]">
             <BookOpen className="w-8 h-8" />
           </div>
-          <h1 className="font-serif text-3xl md:text-4xl text-parchment-100 font-bold tracking-wide">
+          <h1 className="font-sans text-3xl md:text-4xl text-parchment-100 font-bold tracking-wide">
             Orbit
           </h1>
           <p className="text-parchment-500 mt-2 text-sm max-w-xs mx-auto">
@@ -52,7 +60,10 @@ export default async function LoginPage({
           {/* Email / Password Sign In Form */}
           <form action={login} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+              <label
+                htmlFor="email"
+                className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+              >
                 Email Address
               </label>
               <div className="relative">
@@ -70,7 +81,10 @@ export default async function LoginPage({
 
             <div>
               <div className="flex justify-between items-center mb-2">
-                <label htmlFor="password" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider">
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider"
+                >
                   Password
                 </label>
               </div>

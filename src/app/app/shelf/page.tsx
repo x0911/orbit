@@ -7,7 +7,10 @@ export const dynamic = "force-dynamic";
 export default async function ShelfPage() {
   const supabase = await createClient();
 
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
   if (authError || !user) {
     redirect("/login");
   }
@@ -15,7 +18,8 @@ export default async function ShelfPage() {
   // Fetch user shelves data
   const { data: shelvesData, error: shelfFetchError } = await supabase
     .from("shelves")
-    .select(`
+    .select(
+      `
       id,
       status,
       current_page,
@@ -28,7 +32,8 @@ export default async function ShelfPage() {
         genre,
         slug
       )
-    `)
+    `,
+    )
     .eq("user_id", user.id)
     .order("updated_at", { ascending: false });
 
@@ -42,23 +47,25 @@ export default async function ShelfPage() {
       id: string;
       status: string;
       current_page: number;
-      books: {
-        id: string;
-        title: string;
-        author: string;
-        cover_url: string | null;
-        page_count: number;
-        genre: string;
-        slug: string;
-      } | Array<{
-        id: string;
-        title: string;
-        author: string;
-        cover_url: string | null;
-        page_count: number;
-        genre: string;
-        slug: string;
-      }>;
+      books:
+        | {
+            id: string;
+            title: string;
+            author: string;
+            cover_url: string | null;
+            page_count: number;
+            genre: string;
+            slug: string;
+          }
+        | Array<{
+            id: string;
+            title: string;
+            author: string;
+            cover_url: string | null;
+            page_count: number;
+            genre: string;
+            slug: string;
+          }>;
     };
     const book = Array.isArray(s.books) ? s.books[0] : s.books;
     return {
@@ -85,11 +92,12 @@ export default async function ShelfPage() {
   return (
     <div className="space-y-8">
       <div className="text-left">
-        <h1 className="font-serif text-3xl font-bold tracking-wide text-parchment-100">
+        <h1 className="font-sans text-3xl font-bold tracking-wide text-parchment-100">
           My Library Shelf
         </h1>
         <p className="text-sm text-parchment-500 mt-1">
-          Keep track of books you want to read, are currently reading, or have completed.
+          Keep track of books you want to read, are currently reading, or have
+          completed.
         </p>
       </div>
       <ShelfView initialShelves={shelves} initialReviewMap={reviewMap} />

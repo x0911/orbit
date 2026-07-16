@@ -27,7 +27,8 @@ export default async function PublicBookPage({
   // 2. Fetch reviews with profile names
   const { data: reviews } = await supabase
     .from("reviews")
-    .select(`
+    .select(
+      `
       rating,
       body,
       created_at,
@@ -35,12 +36,15 @@ export default async function PublicBookPage({
         username,
         display_name
       )
-    `)
+    `,
+    )
     .eq("book_id", book.id)
     .order("created_at", { ascending: false });
 
   // 3. Fetch user session to check if authenticated
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // Check if book is already on user's shelf
   let userShelfStatus: string | null = null;
@@ -58,13 +62,19 @@ export default async function PublicBookPage({
   const reviewList = reviews || [];
   const averageRating =
     reviewList.length > 0
-      ? (reviewList.reduce((acc, r) => acc + (r.rating || 0), 0) / reviewList.length).toFixed(1)
+      ? (
+          reviewList.reduce((acc, r) => acc + (r.rating || 0), 0) /
+          reviewList.length
+        ).toFixed(1)
       : null;
 
   // Add to shelf action wrapper for forms
   const handleAddToShelfAction = async (formData: FormData) => {
     "use server";
-    const status = formData.get("status") as "want_to_read" | "reading" | "finished";
+    const status = formData.get("status") as
+      | "want_to_read"
+      | "reading"
+      | "finished";
     await addToShelf(
       {
         title: book.title,
@@ -74,7 +84,7 @@ export default async function PublicBookPage({
         genre: book.genre || "",
         page_count: book.page_count || 200,
       },
-      status
+      status,
     );
   };
 
@@ -103,7 +113,7 @@ export default async function PublicBookPage({
                   className="object-cover"
                 />
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center text-parchment-500 text-sm font-serif p-4 text-center">
+                <div className="absolute inset-0 flex items-center justify-center text-parchment-500 text-sm font-sans p-4 text-center">
                   {book.title}
                 </div>
               )}
@@ -116,14 +126,15 @@ export default async function PublicBookPage({
               <span className="inline-block text-xs font-semibold px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-3">
                 {book.genre}
               </span>
-              <h1 className="font-serif text-3xl md:text-4xl font-bold tracking-wide text-parchment-100 mb-2">
+              <h1 className="font-sans text-3xl md:text-4xl font-bold tracking-wide text-parchment-100 mb-2">
                 {book.title}
               </h1>
               <p className="text-lg text-parchment-300">
                 by <span className="font-medium">{book.author}</span>
               </p>
               <p className="text-xs text-parchment-500 mt-1">
-                {book.page_count} pages • Open Library ID: {book.open_library_id}
+                {book.page_count} pages • Open Library ID:{" "}
+                {book.open_library_id}
               </p>
             </div>
 
@@ -134,7 +145,8 @@ export default async function PublicBookPage({
                   <Star
                     key={star}
                     className={`w-5 h-5 ${
-                      averageRating && star <= Math.round(parseFloat(averageRating))
+                      averageRating &&
+                      star <= Math.round(parseFloat(averageRating))
                         ? "fill-current"
                         : "opacity-30"
                     }`}
@@ -145,7 +157,8 @@ export default async function PublicBookPage({
                 {averageRating ? `${averageRating} / 5.0` : "No ratings yet"}
               </span>
               <span className="text-xs text-parchment-500">
-                ({reviewList.length} {reviewList.length === 1 ? "review" : "reviews"})
+                ({reviewList.length}{" "}
+                {reviewList.length === 1 ? "review" : "reviews"})
               </span>
             </div>
 
@@ -153,7 +166,9 @@ export default async function PublicBookPage({
             <div className="p-6 rounded-xl bg-ink-900 border border-ink-800 max-w-md">
               {user ? (
                 <div>
-                  <h3 className="text-sm font-semibold mb-3">Your Shelf Status</h3>
+                  <h3 className="text-sm font-semibold mb-3">
+                    Your Shelf Status
+                  </h3>
                   {userShelfStatus ? (
                     <div className="space-y-3">
                       <p className="text-xs text-parchment-300">
@@ -170,8 +185,14 @@ export default async function PublicBookPage({
                       </Link>
                     </div>
                   ) : (
-                    <form action={handleAddToShelfAction} className="flex flex-col gap-3">
-                      <label htmlFor="status-select" className="text-xs text-parchment-500 uppercase font-semibold tracking-wider">
+                    <form
+                      action={handleAddToShelfAction}
+                      className="flex flex-col gap-3"
+                    >
+                      <label
+                        htmlFor="status-select"
+                        className="text-xs text-parchment-500 uppercase font-semibold tracking-wider"
+                      >
                         Add to Shelf
                       </label>
                       <div className="flex gap-2">
@@ -216,7 +237,7 @@ export default async function PublicBookPage({
 
         {/* Reviews Section */}
         <div className="border-t border-ink-800 pt-12">
-          <h2 className="font-serif text-2xl font-bold mb-6 text-parchment-100">
+          <h2 className="font-sans text-2xl font-bold mb-6 text-parchment-100">
             Community Reviews
           </h2>
 
@@ -229,7 +250,10 @@ export default async function PublicBookPage({
           ) : (
             <div className="space-y-6">
               {reviewList.map((review, i) => {
-                const profile = review.profiles as unknown as { display_name: string; username: string };
+                const profile = review.profiles as unknown as {
+                  display_name: string;
+                  username: string;
+                };
                 return (
                   <div
                     key={i}
@@ -249,7 +273,9 @@ export default async function PublicBookPage({
                           <Star
                             key={star}
                             className={`w-4 h-4 ${
-                              star <= (review.rating || 0) ? "fill-current" : "opacity-20"
+                              star <= (review.rating || 0)
+                                ? "fill-current"
+                                : "opacity-20"
                             }`}
                           />
                         ))}
@@ -261,7 +287,8 @@ export default async function PublicBookPage({
                       </p>
                     )}
                     <div className="text-[10px] text-parchment-500 pt-1">
-                      Reviewed on {new Date(review.created_at || "").toLocaleDateString()}
+                      Reviewed on{" "}
+                      {new Date(review.created_at || "").toLocaleDateString()}
                     </div>
                   </div>
                 );

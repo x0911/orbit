@@ -45,11 +45,14 @@ export default function HomePage() {
         <div className="absolute inset-0 z-10 flex flex-col justify-between max-w-7xl mx-auto px-6 py-8 pointer-events-none">
           {/* Bottom header line */}
           <div className="flex justify-between items-center w-full">
-            <Link href="/" className="flex items-center gap-2 group pointer-events-auto">
+            <Link
+              href="/"
+              className="flex items-center gap-2 group pointer-events-auto"
+            >
               <div className="w-8 h-8 rounded-full bg-ink-900 border border-ink-800 text-amber-500 flex items-center justify-center shadow-md">
                 <BookOpen className="w-4 h-4" />
               </div>
-              <span className="font-serif text-lg font-bold tracking-wide text-parchment-100">
+              <span className="font-sans text-lg font-bold tracking-wide text-parchment-100">
                 Orbit
               </span>
             </Link>
@@ -69,12 +72,13 @@ export default function HomePage() {
                 <Sparkles className="w-3.5 h-3.5" />
                 Animated Book Tracker
               </div>
-              <h1 className="font-serif text-4xl md:text-6xl font-bold tracking-tight text-parchment-100 leading-tight">
+              <h1 className="font-sans text-4xl md:text-6xl font-bold tracking-tight text-parchment-100 leading-tight">
                 Your Reading <br />
                 Space, Reimagined.
               </h1>
               <p className="text-sm md:text-base text-parchment-500 font-light leading-relaxed max-w-md">
-                Build your digital library bookshelf, log progress with visual indicators, follow reading circles, and share annual statistics.
+                Build your digital library bookshelf, log progress with visual
+                indicators, follow reading circles, and share annual statistics.
               </p>
             </div>
 
@@ -112,11 +116,12 @@ export default function HomePage() {
       <section className="py-20 border-t border-ink-900 bg-ink-950 px-6">
         <div className="max-w-4xl mx-auto space-y-6 text-center">
           <div className="space-y-2">
-            <h2 className="font-serif text-2xl md:text-3xl font-bold tracking-wide">
+            <h2 className="font-sans text-2xl md:text-3xl font-bold tracking-wide">
               Your Shelf, Alive
             </h2>
             <p className="text-xs text-parchment-500 max-w-sm mx-auto">
-              Visual lean-and-settle book spine physics. A bookshelf that responds interactively as you scroll.
+              Visual lean-and-settle book spine physics. A bookshelf that
+              responds interactively as you scroll.
             </p>
           </div>
           <ShelfCanvas />
@@ -127,11 +132,12 @@ export default function HomePage() {
       <section className="py-20 border-t border-ink-900 bg-ink-950 px-6">
         <div className="max-w-4xl mx-auto space-y-6 text-center">
           <div className="space-y-2">
-            <h2 className="font-serif text-2xl md:text-3xl font-bold tracking-wide">
+            <h2 className="font-sans text-2xl md:text-3xl font-bold tracking-wide">
               Progress, Visualized
             </h2>
             <p className="text-xs text-parchment-500 max-w-sm mx-auto">
-              Circular rings trace your logged reading pages and fill ratios, complete with dynamic percentage updates.
+              Circular rings trace your logged reading pages and fill ratios,
+              complete with dynamic percentage updates.
             </p>
           </div>
           <ProgressRings />
@@ -147,11 +153,12 @@ export default function HomePage() {
       <section className="py-20 border-t border-ink-900 bg-ink-950 px-6">
         <div className="max-w-4xl mx-auto space-y-4 text-center">
           <div className="space-y-2">
-            <h2 className="font-serif text-2xl md:text-3xl font-bold tracking-wide">
+            <h2 className="font-sans text-2xl md:text-3xl font-bold tracking-wide">
               Your Year in Reading
             </h2>
             <p className="text-xs text-parchment-500 max-w-sm mx-auto">
-              Track reading summaries, page volumes, and explore dynamic genre distribution ratios.
+              Track reading summaries, page volumes, and explore dynamic genre
+              distribution ratios.
             </p>
           </div>
           <WrappedPreview />
@@ -165,11 +172,12 @@ export default function HomePage() {
 
         <div className="max-w-lg mx-auto space-y-8 relative z-10">
           <div className="space-y-3">
-            <h3 className="font-serif text-2xl md:text-3xl font-bold tracking-wide text-parchment-100">
+            <h3 className="font-sans text-2xl md:text-3xl font-bold tracking-wide text-parchment-100">
               Ready to explore?
             </h3>
             <p className="text-xs text-parchment-500 max-w-xs mx-auto">
-              Sign in to a demo guest account instantly and start structuring your library shelf.
+              Sign in to a demo guest account instantly and start structuring
+              your library shelf.
             </p>
           </div>
 
@@ -187,8 +195,13 @@ export default function HomePage() {
           </div>
 
           <div className="text-[10px] text-parchment-500/80 pt-12 space-y-2">
-            <p>© {new Date().getFullYear()} Orbit Project. Low-poly WebGL design centerpiece.</p>
-            <p className="text-[9px] text-parchment-500/40">Built using Next.js 15, Three.js, GSAP, and Tailwind CSS.</p>
+            <p>
+              © {new Date().getFullYear()} Orbit Project. Low-poly WebGL design
+              centerpiece.
+            </p>
+            <p className="text-[9px] text-parchment-500/40">
+              Built using Next.js 15, Three.js, GSAP, and Tailwind CSS.
+            </p>
           </div>
         </div>
       </footer>

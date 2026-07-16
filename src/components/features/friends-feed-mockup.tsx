@@ -83,7 +83,7 @@ export default function FriendsFeedMockup() {
           start: "top 80%",
           toggleActions: "play none none reverse", // Reverses on scroll-up
         },
-      }
+      },
     );
 
     return () => {
@@ -93,15 +93,12 @@ export default function FriendsFeedMockup() {
   }, [prefersReducedMotion]);
 
   return (
-    <div
-      ref={containerRef}
-      className="max-w-xl mx-auto space-y-8"
-    >
+    <div ref={containerRef} className="max-w-xl mx-auto space-y-8">
       {/* Section Heading utilizing SplitText */}
       <div className="text-center space-y-2">
         <SplitText
           text="See What Friends Are Reading"
-          className="font-serif text-2xl md:text-3xl font-bold tracking-wide text-parchment-100"
+          className="font-sans text-2xl md:text-3xl font-bold tracking-wide text-parchment-100"
           splitType="words"
           delay={60}
           duration={0.8}
@@ -120,7 +117,9 @@ export default function FriendsFeedMockup() {
             <div
               key={act.id}
               className={`p-5 bg-ink-900 border border-ink-850 rounded-2xl flex gap-4 text-left shadow-lg transition-transform duration-300 ${
-                prefersReducedMotion ? "" : "hover:translate-y-[-2px] hover:border-ink-800"
+                prefersReducedMotion
+                  ? ""
+                  : "hover:translate-y-[-2px] hover:border-ink-800"
               }`}
             >
               {/* Avatar circle (no emojis) */}
@@ -132,14 +131,18 @@ export default function FriendsFeedMockup() {
               <div className="flex-1 min-w-0 flex flex-col justify-between">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-1 text-xs text-parchment-300">
-                    <span className="font-bold text-parchment-100">{act.user.name}</span>
+                    <span className="font-bold text-parchment-100">
+                      {act.user.name}
+                    </span>
                     <span>{act.action}</span>
                   </div>
 
-                  <h4 className="font-serif font-bold text-sm text-parchment-100 line-clamp-1">
+                  <h4 className="font-sans font-bold text-sm text-parchment-100 line-clamp-1">
                     {act.bookTitle}
                   </h4>
-                  <p className="text-[10px] text-parchment-500">by {act.bookAuthor}</p>
+                  <p className="text-[10px] text-parchment-500">
+                    by {act.bookAuthor}
+                  </p>
 
                   {showRating && (
                     <div className="flex items-center gap-1 pt-1 text-amber-500">

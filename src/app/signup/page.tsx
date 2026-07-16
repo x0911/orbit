@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { BookOpen, Key, Mail, Lock, User, Sparkles, ShieldAlert } from "lucide-react";
+import {
+  BookOpen,
+  Key,
+  Mail,
+  Lock,
+  User,
+  Sparkles,
+  ShieldAlert,
+} from "lucide-react";
 import { signup, loginDemo } from "../login/actions";
 
 export default async function SignupPage({
@@ -21,7 +29,7 @@ export default async function SignupPage({
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-ink-900 border border-ink-800 text-amber-500 mb-4 shadow-[0_0_15px_rgba(230,166,46,0.1)]">
             <BookOpen className="w-8 h-8" />
           </div>
-          <h1 className="font-serif text-3xl md:text-4xl text-parchment-100 font-bold tracking-wide">
+          <h1 className="font-sans text-3xl md:text-4xl text-parchment-100 font-bold tracking-wide">
             Orbit
           </h1>
           <p className="text-parchment-500 mt-2 text-sm max-w-xs mx-auto">
@@ -44,7 +52,10 @@ export default async function SignupPage({
           {/* Email / Password Sign Up Form */}
           <form action={signup} className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+              <label
+                htmlFor="username"
+                className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+              >
                 Username
               </label>
               <div className="relative">
@@ -63,7 +74,10 @@ export default async function SignupPage({
             </div>
 
             <div>
-              <label htmlFor="display_name" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+              <label
+                htmlFor="display_name"
+                className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+              >
                 Display Name
               </label>
               <div className="relative">
@@ -80,7 +94,10 @@ export default async function SignupPage({
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+              <label
+                htmlFor="email"
+                className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+              >
                 Email Address
               </label>
               <div className="relative">
@@ -97,7 +114,10 @@ export default async function SignupPage({
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
+              <label
+                htmlFor="password"
+                className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2"
+              >
                 Password
               </label>
               <div className="relative">

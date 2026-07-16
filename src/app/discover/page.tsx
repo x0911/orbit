@@ -27,7 +27,9 @@ export default async function DiscoverPage({
 
   // 1. Fetch current user session to determine if logged in
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   // 2. Fetch profile info if logged in
   let profile = null;
@@ -44,19 +46,23 @@ export default async function DiscoverPage({
     // Fetch user shelves to know status of books
     const { data: userShelves } = await supabase
       .from("shelves")
-      .select(`
+      .select(
+        `
         status,
         books (
           open_library_id
         )
-      `)
+      `,
+      )
       .eq("user_id", user.id);
 
     if (userShelves) {
-      (userShelves as unknown as Array<{
-        status: string;
-        books: { open_library_id: string } | null;
-      }>).forEach((s) => {
+      (
+        userShelves as unknown as Array<{
+          status: string;
+          books: { open_library_id: string } | null;
+        }>
+      ).forEach((s) => {
         const olId = s.books?.open_library_id;
         if (olId) {
           userBookStatusMap[olId] = s.status;
@@ -73,23 +79,27 @@ export default async function DiscoverPage({
     try {
       const res = await fetch(
         `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=9`,
-        { next: { revalidate: 3600 } } // cache search results for 1 hour
+        { next: { revalidate: 3600 } }, // cache search results for 1 hour
       );
       if (!res.ok) {
         throw new Error("Failed to fetch from Open Library API");
       }
-      const data = await res.json() as { docs?: Array<{
-        title: string;
-        author_name?: string[];
-        key: string;
-        edition_key?: string[];
-        cover_i?: number;
-        number_of_pages_median?: number;
-        subject?: string[];
-      }> };
+      const data = (await res.json()) as {
+        docs?: Array<{
+          title: string;
+          author_name?: string[];
+          key: string;
+          edition_key?: string[];
+          cover_i?: number;
+          number_of_pages_median?: number;
+          subject?: string[];
+        }>;
+      };
       searchResults = (data.docs || []).map((doc) => {
         const coverId = doc.cover_i;
-        const openLibraryId = doc.key ? doc.key.replace("/works/", "") : doc.edition_key?.[0] || "";
+        const openLibraryId = doc.key
+          ? doc.key.replace("/works/", "")
+          : doc.edition_key?.[0] || "";
         return {
           title: doc.title,
           author: doc.author_name?.[0] || "Unknown Author",
@@ -102,14 +112,12 @@ export default async function DiscoverPage({
         };
       });
     } catch (err: unknown) {
-      loadingError = (err as Error).message || "An error occurred while searching.";
+      loadingError =
+        (err as Error).message || "An error occurred while searching.";
     }
   } else {
     // Show 9 popular seeded books from the database when search query is empty
-    const { data: dbBooks } = await supabase
-      .from("books")
-      .select("*")
-      .limit(9);
+    const { data: dbBooks } = await supabase.from("books").select("*").limit(9);
 
     if (dbBooks) {
       searchResults = dbBooks.map((b) => ({
@@ -132,7 +140,10 @@ export default async function DiscoverPage({
     const coverUrl = formData.get("cover_url") as string;
     const pageCount = parseInt(formData.get("page_count") as string, 10);
     const genre = formData.get("genre") as string;
-    const status = formData.get("status") as "want_to_read" | "reading" | "finished";
+    const status = formData.get("status") as
+      | "want_to_read"
+      | "reading"
+      | "finished";
 
     const res = await addToShelf(
       {
@@ -143,7 +154,7 @@ export default async function DiscoverPage({
         page_count: pageCount || 200,
         genre: genre || "Fiction",
       },
-      status
+      status,
     );
 
     if (res.success) {
@@ -168,7 +179,7 @@ export default async function DiscoverPage({
               <div className="w-10 h-10 rounded-full bg-ink-950 border border-ink-800 text-amber-500 flex items-center justify-center shadow-md">
                 <BookOpen className="w-5 h-5" />
               </div>
-              <span className="font-serif text-xl font-bold tracking-wide text-parchment-100">
+              <span className="font-sans text-xl font-bold tracking-wide text-parchment-100">
                 Orbit
               </span>
             </Link>
@@ -194,11 +205,13 @@ export default async function DiscoverPage({
             <Compass className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="font-serif text-3xl font-bold tracking-wide">
+            <h1 className="font-sans text-3xl font-bold tracking-wide">
               Discover Books
             </h1>
             <p className="text-sm text-parchment-500">
-              {query ? "Explore Open Library matches" : "Trending volumes and community favorites"}
+              {query
+                ? "Explore Open Library matches"
+                : "Trending volumes and community favorites"}
             </p>
           </div>
         </div>
@@ -234,7 +247,9 @@ export default async function DiscoverPage({
         {/* Books Grid */}
         <div className="space-y-6 text-left">
           <h2 className="text-xs font-semibold text-parchment-500 uppercase tracking-widest">
-            {query ? `Search Results for "${query}"` : "Featured Reading Selections"}
+            {query
+              ? `Search Results for "${query}"`
+              : "Featured Reading Selections"}
           </h2>
 
           {loadingError && (
@@ -274,7 +289,7 @@ export default async function DiscoverPage({
                             className="object-cover"
                           />
                         ) : (
-                          <div className="absolute inset-0 flex items-center justify-center text-parchment-500 text-[10px] p-2 text-center font-serif leading-tight">
+                          <div className="absolute inset-0 flex items-center justify-center text-parchment-500 text-[10px] p-2 text-center font-sans leading-tight">
                             {book.title}
                           </div>
                         )}
@@ -282,7 +297,7 @@ export default async function DiscoverPage({
 
                       <div className="text-center space-y-1">
                         <div className="flex items-center justify-center gap-2">
-                          <h3 className="font-serif font-bold text-parchment-100 text-sm line-clamp-1">
+                          <h3 className="font-sans font-bold text-parchment-100 text-sm line-clamp-1">
                             {book.title}
                           </h3>
                         </div>
@@ -292,7 +307,7 @@ export default async function DiscoverPage({
                         <p className="text-[10px] text-parchment-500">
                           {book.page_count} pages • {book.genre}
                         </p>
-                        
+
                         {/* Shelf status indicator badge */}
                         {cleanStatusLabel && (
                           <div className="inline-flex mt-1 text-[9px] font-semibold bg-amber-500/10 border border-amber-500/25 text-amber-500 px-2 py-0.5 rounded uppercase tracking-wider">
@@ -305,16 +320,47 @@ export default async function DiscoverPage({
                     {/* Shelf Controls */}
                     <div className="mt-5 pt-4 border-t border-ink-850">
                       {user ? (
-                        <form action={handleAddToShelf} className="flex flex-col gap-3">
-                          <input type="hidden" name="open_library_id" value={book.open_library_id} />
-                          <input type="hidden" name="title" value={book.title} />
-                          <input type="hidden" name="author" value={book.author} />
-                          <input type="hidden" name="cover_url" value={book.cover_url || ""} />
-                          <input type="hidden" name="page_count" value={book.page_count} />
-                          <input type="hidden" name="genre" value={book.genre} />
+                        <form
+                          action={handleAddToShelf}
+                          className="flex flex-col gap-3"
+                        >
+                          <input
+                            type="hidden"
+                            name="open_library_id"
+                            value={book.open_library_id}
+                          />
+                          <input
+                            type="hidden"
+                            name="title"
+                            value={book.title}
+                          />
+                          <input
+                            type="hidden"
+                            name="author"
+                            value={book.author}
+                          />
+                          <input
+                            type="hidden"
+                            name="cover_url"
+                            value={book.cover_url || ""}
+                          />
+                          <input
+                            type="hidden"
+                            name="page_count"
+                            value={book.page_count}
+                          />
+                          <input
+                            type="hidden"
+                            name="genre"
+                            value={book.genre}
+                          />
 
                           {/* Horizontal Radio Button Row */}
-                          <div className="flex gap-1.5" role="radiogroup" aria-label="Shelf status selector">
+                          <div
+                            className="flex gap-1.5"
+                            role="radiogroup"
+                            aria-label="Shelf status selector"
+                          >
                             {[
                               { value: "want_to_read", label: "Wishlist" },
                               { value: "reading", label: "Reading" },
@@ -330,7 +376,11 @@ export default async function DiscoverPage({
                                   type="radio"
                                   name="status"
                                   value={opt.value}
-                                  defaultChecked={currentStatus ? currentStatus === opt.value : opt.value === "want_to_read"}
+                                  defaultChecked={
+                                    currentStatus
+                                      ? currentStatus === opt.value
+                                      : opt.value === "want_to_read"
+                                  }
                                   className="sr-only"
                                 />
                                 {opt.label}
