@@ -16,12 +16,24 @@ export default function Nav({
 }) {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [animateModal, setAnimateModal] = useState(false);
 
   const links = [
     { href: "/app/shelf", label: "My Shelf", icon: BookOpen },
     { href: "/app/feed", label: "Friend Feed", icon: Users },
     { href: "/discover", label: "Discover", icon: Compass },
   ];
+
+  const triggerLogoutModal = () => {
+    setShowLogoutModal(true);
+    setTimeout(() => setAnimateModal(true), 10);
+  };
+
+  const closeLogoutModal = () => {
+    setAnimateModal(false);
+    setTimeout(() => setShowLogoutModal(false), 200);
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -79,7 +91,7 @@ export default function Nav({
             </div>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={triggerLogoutModal}
             aria-label="Sign Out"
             className="flex items-center justify-center p-2 rounded-lg bg-ink-950 border border-ink-800 hover:border-red-900/30 text-parchment-500 hover:text-red-400 hover:bg-red-950/10 transition-all cursor-pointer"
           >
@@ -142,10 +154,51 @@ export default function Nav({
             <div className="flex items-center gap-2">
               <ThemeToggle />
               <button
-                onClick={handleLogout}
+                onClick={triggerLogoutModal}
                 className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 py-2 px-3 rounded-lg border border-red-950/20 bg-red-950/10 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Confirmation Modal */}
+      {showLogoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop overlay */}
+          <div 
+            className={`fixed inset-0 bg-ink-950/85 backdrop-blur-sm transition-opacity duration-200 ${
+              animateModal ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={closeLogoutModal}
+          />
+          
+          {/* Modal Box */}
+          <div 
+            className={`relative bg-ink-900 border border-ink-800 rounded-2xl max-w-sm w-full p-6 text-left shadow-2xl transition-all transform duration-200 ${
+              animateModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
+            }`}
+          >
+            <h3 className="font-sans text-lg font-bold text-parchment-100 mb-2">
+              Confirm Sign Out
+            </h3>
+            <p className="text-sm text-parchment-500 mb-6">
+              Are you sure you want to sign out of your Orbit account? Any unsaved review draft changes may be lost.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeLogoutModal}
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-ink-950 border border-ink-800 text-parchment-300 hover:text-parchment-100 transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 rounded-lg text-xs font-semibold bg-red-600 hover:bg-red-700 text-white transition-all cursor-pointer border border-transparent"
+              >
                 Sign Out
               </button>
             </div>

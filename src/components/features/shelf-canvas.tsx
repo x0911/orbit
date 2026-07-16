@@ -18,14 +18,14 @@ interface BookSpine {
 }
 
 const books: BookSpine[] = [
-  { title: "Neuromancer", author: "William Gibson", color: "#141210", textColor: "#F4EDE2", height: 180, width: 34, initialLean: -0.4 },
-  { title: "Snow Crash", author: "Neal Stephenson", color: "#E6A62E", textColor: "#0B0908", height: 195, width: 36, initialLean: -0.3 },
-  { title: "Dune", author: "Frank Herbert", color: "#1E1B18", textColor: "#D8CCB8", height: 210, width: 44, initialLean: -0.25 },
-  { title: "Foundation", author: "Isaac Asimov", color: "#9C8F7A", textColor: "#F4EDE2", height: 175, width: 30, initialLean: 0.15 },
-  { title: "1984", author: "George Orwell", color: "#C4881B", textColor: "#0B0908", height: 185, width: 32, initialLean: 0.25 },
-  { title: "Fahrenheit 451", author: "Ray Bradbury", color: "#141210", textColor: "#E6A62E", height: 190, width: 35, initialLean: 0.3 },
-  { title: "Hyperion", author: "Dan Simmons", color: "#E6A62E", textColor: "#1E1B18", height: 200, width: 42, initialLean: 0.35 },
-  { title: "The Hobbit", author: "J.R.R. Tolkien", color: "#1E1B18", textColor: "#F4EDE2", height: 170, width: 38, initialLean: 0.4 },
+  { title: "Neuromancer", author: "William Gibson", color: "#064E3B", textColor: "#ECFDF5", height: 180, width: 34, initialLean: -0.4 },
+  { title: "Snow Crash", author: "Neal Stephenson", color: "#10B981", textColor: "#060B08", height: 195, width: 36, initialLean: -0.3 },
+  { title: "Dune", author: "Frank Herbert", color: "#0D1410", textColor: "#6EE7B7", height: 210, width: 44, initialLean: -0.25 },
+  { title: "Foundation", author: "Isaac Asimov", color: "#047857", textColor: "#ECFDF5", height: 175, width: 30, initialLean: 0.15 },
+  { title: "1984", author: "George Orwell", color: "#059669", textColor: "#ECFDF5", height: 185, width: 32, initialLean: 0.25 },
+  { title: "Fahrenheit 451", author: "Ray Bradbury", color: "#34D399", textColor: "#060B08", height: 190, width: 35, initialLean: 0.3 },
+  { title: "Hyperion", author: "Dan Simmons", color: "#10B981", textColor: "#064E3B", height: 200, width: 42, initialLean: 0.35 },
+  { title: "The Hobbit", author: "J.R.R. Tolkien", color: "#0D1410", textColor: "#6EE7B7", height: 170, width: 38, initialLean: 0.4 },
 ];
 
 export default function ShelfCanvas() {
@@ -91,9 +91,9 @@ export default function ShelfCanvas() {
       const startX = (dimensions.width - shelfWidth) / 2;
 
       // Draw Wooden Shelf Base
-      ctx.fillStyle = "#1E1B18";
+      ctx.fillStyle = "#17241E";
       ctx.fillRect(startX - 10, shelfY, shelfWidth + 20, 10);
-      ctx.fillStyle = "#E6A62E"; // highlight edge
+      ctx.fillStyle = "#10B981"; // highlight edge
       ctx.fillRect(startX - 10, shelfY, shelfWidth + 20, 2);
 
       // Center shelf offset calculation for scroll parallax
@@ -143,8 +143,8 @@ export default function ShelfCanvas() {
         ctx.fillRect(spineX, spineY, book.width, book.height);
         ctx.strokeRect(spineX, spineY, book.width, book.height);
 
-        // Draw gold highlights on spine edges
-        ctx.fillStyle = "#E6A62E";
+        // Draw emerald highlights on spine edges
+        ctx.fillStyle = "#10B981";
         ctx.fillRect(spineX + 2, spineY + 6, book.width - 4, 3);
         ctx.fillRect(spineX + 2, spineY + book.height - 10, book.width - 4, 3);
 

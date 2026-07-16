@@ -11,6 +11,7 @@ import WrappedPreview from "@/components/features/wrapped-preview";
 import Magnet from "@/components/Magnet";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import ThemeToggle from "@/components/theme-toggle";
 
 // Dynamically import the Three.js Orbit centerpiece so it doesn't block initial page paint (LCP)
 const HeroOrbit = dynamic(() => import("@/components/features/hero-orbit"), {
@@ -57,12 +58,15 @@ export default function HomePage() {
               </span>
             </Link>
 
-            <Link
-              href={user ? "/app/shelf" : "/login"}
-              className="bg-ink-900/80 hover:bg-ink-850 text-parchment-300 hover:text-parchment-100 border border-ink-800 hover:border-amber-500/20 px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all pointer-events-auto shadow-md"
-            >
-              {user ? "Dashboard" : "Sign In"}
-            </Link>
+            <div className="flex items-center gap-3 pointer-events-auto">
+              <ThemeToggle />
+              <Link
+                href={user ? "/app/shelf" : "/login"}
+                className="bg-ink-900/80 hover:bg-ink-850 text-parchment-300 hover:text-parchment-100 border border-ink-800 hover:border-amber-500/20 px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all shadow-md"
+              >
+                {user ? "Dashboard" : "Sign In"}
+              </Link>
+            </div>
           </div>
 
           {/* Central Headline & CTA */}

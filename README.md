@@ -1,65 +1,89 @@
+<div align="center">
+
 # Orbit
 
-**Animated Reading & Book Discovery Tracker**
+### A reading tracker that actually feels alive.
 
-Orbit is a visual reading companion and discovery ledger built to demonstrate advanced animation techniques, database integrations, and accessibility compliance. 
+**[→ Live demo: join-orbit.vercel.app](https://join-orbit.vercel.app/)** — no signup needed, click "Try Demo" and explore.
 
-Instead of traditional flat tables, Orbit maps library shelves, progress indicators, community reviews, and reading logs into an interactive, motion-rich workspace.
-
----
-
-## 🚀 Key Features
-
-- **WebGL Centerpiece (Three.js)**: A low-poly wireframe-outlined open book model centerpiece with glowing amber moons orbiting on skewed elliptical paths, scrubbed dollying and skews linked to scroll progress.
-- **"Your Shelf, Alive" (Canvas 2D)**: A hand-rolled HTML5 Canvas drawing book spines that lean and settle staggered as you scroll.
-- **"Progress, Visualized" (SVG Rings)**: Staggered circular draw-ins matched with value count-ups.
-- **Friend Activity Feed**: Real-time updates from followed profiles synced instantly using Supabase PostgreSQL Realtime channels.
-- **Yearly Wrapped slideshow**: Personal slideshow summaries (Spotify Wrapped style) with SVG genre distribution donut segments and GSAP counting tweens.
-- **Accessible & Performance-Minded**:
-  - Full `prefers-reduced-motion` compliance across all WebGL, Canvas, SVG, and GSAP timelines.
-  - Active focus trapping, key controls, and Escape listeners on modals.
-  - Dynamic imports (`ssr: false`) and canvas viewport observations (`IntersectionObserver`) to keep LCP quick and run loop loads low.
+</div>
 
 ---
 
-## 🛠️ Technology Stack
+Most reading trackers look like a spreadsheet wearing a nice font. Orbit doesn't.
 
-- **Framework**: Next.js 15 (App Router, TypeScript strict)
-- **Styling**: Tailwind CSS v4
-- **WebGL**: Three.js via `@react-three/fiber` & `@react-three/drei`
-- **Animation**: GSAP + ScrollTrigger
-- **Database/Realtime**: Supabase (PostgreSQL, Auth, Realtime, RLS)
-- **Icons**: `lucide-react` (Zero emoji characters utilized)
-- **Motion Primitives**: react-bits (TS-TW variants)
+It started from a simple annoyance: tools like this always *feel* like a database with a UI bolted on top. So Orbit was built the other way around — starting from motion and craft, then wiring the data underneath it. The result is a shelf that leans and settles like real books being placed down, progress rings that draw themselves in as you scroll, a friend activity feed that updates the instant someone starts a new book, and a hero section built around a small orbiting solar system of book-moons that responds to your scroll and your cursor.
+
+It's a portfolio project, but it's built to production standards — real auth, real Row Level Security, real accessibility work, real performance budget. Nothing here is a mockup.
+
+**If you're a hiring manager skimming this:** the 90-second version is the live demo link above. Click "Try Demo," scroll through the landing page once, then poke around the shelf. Everything below this point is for the engineers on your team who want to see how it's put together.
 
 ---
 
-## 📁 Folder Structure
+## What's actually in it
+
+- **A hero built in Three.js**, not a stock template — a wireframe open book with small glowing moons orbiting it on tilted elliptical paths. Scroll and the camera dollies and rotates with you; move your cursor and it parallaxes subtly. Scroll back up and it reverses cleanly, because a scroll animation that only plays forward isn't really reactive, it's just a delayed page load.
+- **A shelf you can watch come alive** — book spines drawn on a hand-rolled HTML5 Canvas that lean in and settle into place as they scroll into view, no animation library involved.
+- **Progress rings built from raw SVG**, filling in sync with numbers counting up beside them — the same component that powers the real "currently reading" view, not a separate marketing-only asset.
+- **A live friend activity feed**, powered by Supabase Realtime — when someone you follow starts a new book, it shows up without a refresh.
+- **A yearly "Wrapped"** page, in the spirit of Spotify's — genre breakdown, pages read, animated counters, the whole end-of-year reading recap.
+- **Real accessibility work, not an afterthought** — every animation respects `prefers-reduced-motion`, every interactive flow has a full keyboard path, and contrast ratios were checked against the actual dark palette used, not assumed.
+- **A real performance budget** — the 3D scene is dynamically imported and only wakes up once it's on screen, images are locked to their aspect ratio so nothing jumps around while loading, and the activity feed is paginated instead of quietly growing forever.
+
+---
+
+## Tech stack
+
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 15 (App Router, TypeScript strict mode) |
+| Styling | Tailwind CSS v4 |
+| 3D / WebGL | Three.js, via `@react-three/fiber` and `@react-three/drei` |
+| Scroll & motion | GSAP + ScrollTrigger |
+| Motion primitives | react-bits (TS-TW variants) |
+| Database, Auth, Realtime | Supabase (Postgres, Row Level Security, Realtime channels) |
+| Icons | `lucide-react` — every icon in the product is a real SVG component, no emoji characters anywhere in the UI |
+| Hosting | Vercel, with Speed Insights tracking real Core Web Vitals in production |
+
+---
+
+## Project structure
 
 ```
 orbit/
-├── .github/workflows/   # CI Lint & Build Actions
-├── supabase/            # Init schema migrations & seed files
+├── .github/workflows/     # CI: lint, build, and Lighthouse checks on every PR
+├── supabase/              # Schema migrations + seed data for the demo account
 ├── src/
-│   ├── app/             # Next.js App Router (Pages, actions, callback API)
-│   ├── components/      # react-bits animations & visual wrappers
-│   │   ├── features/    # Shelf-view, feed-view, wrapped-view, WebGL orbit
-│   │   └── ui/          # Generic shadcn primitives
-│   ├── hooks/           # useReducedMotion accessibility listener
-│   └── lib/             # Supabase ssr server & client initializers
+│   ├── app/               # Next.js App Router — pages, server actions, route handlers
+│   ├── components/
+│   │   ├── features/      # Shelf view, activity feed, Wrapped page, the WebGL hero
+│   │   └── ui/            # Shared primitives (shadcn + react-bits based)
+│   ├── hooks/             # Including useReducedMotion, checked by every animation
+│   └── lib/               # Supabase client setup (browser + server, split correctly)
 ```
 
 ---
 
-## ⚙️ Local Development Setup
+## Running it locally
 
-### 1. Configure Supabase Projects & Schema
-Create a Supabase project and apply the initial schema located under `supabase/migrations/20260716000000_init_schema.sql`.
+**1. Set up Supabase**
 
-Run the seed script `supabase/seed.sql` to populate guest demo accounts, reciprocal follows, books, shelves, logs, and reviews.
+Create a Supabase project, then apply the schema:
 
-### 2. Configure Environment variables
-Create a `.env.local` file at the root of the project with the following keys:
+```bash
+supabase/migrations/20260716000000_init_schema.sql
+```
+
+Seed it with demo data (accounts, follows, shelves, reading logs, reviews) so the app never shows an empty state:
+
+```bash
+supabase/seed.sql
+```
+
+**2. Environment variables**
+
+Create `.env.local` in the project root:
+
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your-supabase-url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-key
@@ -68,20 +92,24 @@ SUPABASE_JWKS_URL=your-jwks-endpoint-url
 CRON_SECRET=your-cron-secret-key
 ```
 
-### 3. Install & Start Development Server
-```bash
-# Install dependencies
-npm install --legacy-peer-deps
+Orbit uses Supabase's current key system (publishable/secret), not the legacy anon/service_role keys — the publishable key is safe client-side, the secret key never leaves the server.
 
-# Run local development server
+**3. Install and run**
+
+```bash
+npm install --legacy-peer-deps
 npm run dev
 ```
 
-### 4. Build & Lint Verification
-```bash
-# Verify static typings and eslint rules
-npm run lint
+**4. Verify before you push**
 
-# Build production compiled bundle
+```bash
+npm run lint
 npm run build
 ```
+
+---
+
+## A note on how this was built
+
+The landing page's custom Canvas and SVG animations, the Three.js hero, and the scroll-reactive system connecting them were built deliberately from scratch rather than assembled entirely from a motion library — the goal was to demonstrate the underlying animation mechanics themselves (easing, staggering, scroll-scrubbing, viewport-aware performance tradeoffs), not just component composition. react-bits is used where it genuinely fits (text reveals, hover states, card primitives), and never as a substitute for showing that work.

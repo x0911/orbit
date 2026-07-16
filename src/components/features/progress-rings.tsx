@@ -23,7 +23,7 @@ const booksData: RingData[] = [
     percentage: 85,
     currentPage: 340,
     totalPages: 400,
-    color: "#E6A62E",
+    color: "#10B981",
   },
   {
     title: "Neuromancer",
@@ -31,7 +31,7 @@ const booksData: RingData[] = [
     percentage: 50,
     currentPage: 150,
     totalPages: 300,
-    color: "#F2B84B",
+    color: "#34D399",
   },
   {
     title: "1984",
@@ -39,7 +39,7 @@ const booksData: RingData[] = [
     percentage: 20,
     currentPage: 40,
     totalPages: 200,
-    color: "#C4881B",
+    color: "#059669",
   },
 ];
 

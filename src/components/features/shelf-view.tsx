@@ -39,6 +39,7 @@ export default function ShelfView({
   const [reviewMap, setReviewMap] =
     useState<Record<string, number>>(initialReviewMap);
   const [selectedItem, setSelectedItem] = useState<ShelfItem | null>(null);
+  const [animateModal, setAnimateModal] = useState(false);
 
   // Form states in modal
   const [pagesLogValue, setPagesLogValue] = useState("");
@@ -71,14 +72,14 @@ export default function ShelfView({
     setReviewRating(reviewMap[item.books.id] || 5);
     setActionError("");
     setActionSuccess("");
-
-    // Fetch user review comment if it exists (simulate or query if needed, for simplicity we allow editing body)
     setReviewBody("");
+    setTimeout(() => setAnimateModal(true), 10);
   };
 
   // Close modal handler
   const handleCloseModal = () => {
-    setSelectedItem(null);
+    setAnimateModal(false);
+    setTimeout(() => setSelectedItem(null), 200);
   };
 
   // Escape key listener
@@ -387,21 +388,25 @@ export default function ShelfView({
       {/* Detail Modal Overlay */}
       {selectedItem && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-ink-950/80 backdrop-blur-sm animate-in fade-in duration-200"
+          className={`fixed inset-0 z-50 flex items-center justify-center px-4 bg-ink-950/80 backdrop-blur-sm transition-opacity duration-200 ${
+            animateModal ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
           role="dialog"
           aria-modal="true"
           aria-labelledby="modal-title"
         >
           <div
             ref={modalRef}
-            className="bg-ink-900 border border-ink-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative animate-in zoom-in-95 duration-200"
+            className={`bg-ink-900 border border-ink-800 w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative transition-all transform duration-200 ${
+              animateModal ? "scale-100 opacity-100" : "scale-95 opacity-0"
+            }`}
           >
             {/* Close button */}
             <button
               ref={closeButtonRef}
               onClick={handleCloseModal}
               aria-label="Close details"
-              className="absolute top-4 right-4 z-20 p-1.5 rounded-full bg-ink-950 border border-ink-800 text-parchment-500 hover:text-parchment-100 hover:bg-ink-850 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
+              className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-full bg-ink-950 border border-ink-800 text-parchment-500 hover:text-parchment-100 hover:bg-ink-850 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>

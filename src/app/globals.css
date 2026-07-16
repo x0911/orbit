@@ -74,6 +74,10 @@
   --parchment-500-rgb: 4 120 87;
 }
 
+html {
+  font-size: 17px;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);

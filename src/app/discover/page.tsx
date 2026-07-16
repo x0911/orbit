@@ -14,16 +14,20 @@ interface OpenLibraryBook {
   cover_url: string | null;
   page_count: number;
   genre: string;
+  slug?: string;
 }
 
 export default async function DiscoverPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; message?: string }>;
+  searchParams: Promise<{ q?: string; message?: string; genre?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const query = params.q || "";
   const message = params.message || "";
+  const selectedGenre = params.genre || "";
+  const page = parseInt(params.page || "1", 10);
+  const limit = 9;
 
   // 1. Fetch current user session to determine if logged in
   const supabase = await createClient();
@@ -74,17 +78,20 @@ export default async function DiscoverPage({
   // 3. Fetch books from database (if query is empty) or Open Library (if searched)
   let searchResults: OpenLibraryBook[] = [];
   let loadingError = "";
+  let totalItems = 0;
 
   if (query.trim().length > 0) {
     try {
-      const res = await fetch(
-        `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=9`,
-        { next: { revalidate: 3600 } }, // cache search results for 1 hour
-      );
+      const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}${
+        selectedGenre ? `&subject=${encodeURIComponent(selectedGenre)}` : ""
+      }&page=${page}&limit=${limit}`;
+
+      const res = await fetch(url, { next: { revalidate: 3600 } });
       if (!res.ok) {
         throw new Error("Failed to fetch from Open Library API");
       }
       const data = (await res.json()) as {
+        numFound?: number;
         docs?: Array<{
           title: string;
           author_name?: string[];
@@ -95,6 +102,7 @@ export default async function DiscoverPage({
           subject?: string[];
         }>;
       };
+      totalItems = data.numFound || 0;
       searchResults = (data.docs || []).map((doc) => {
         const coverId = doc.cover_i;
         const openLibraryId = doc.key
@@ -109,6 +117,7 @@ export default async function DiscoverPage({
             : null,
           page_count: doc.number_of_pages_median || 200,
           genre: doc.subject?.[0] || "Fiction",
+          slug: openLibraryId,
         };
       });
     } catch (err: unknown) {
@@ -116,10 +125,22 @@ export default async function DiscoverPage({
         (err as Error).message || "An error occurred while searching.";
     }
   } else {
-    // Show 9 popular seeded books from the database when search query is empty
-    const { data: dbBooks } = await supabase.from("books").select("*").limit(9);
+    // Show seeded books from the database with pagination when search query is empty
+    let dbQuery = supabase
+      .from("books")
+      .select("*", { count: "exact" });
 
-    if (dbBooks) {
+    if (selectedGenre) {
+      dbQuery = dbQuery.ilike("genre", `%${selectedGenre}%`);
+    }
+
+    const { data: dbBooks, count, error: dbError } = await dbQuery
+      .range((page - 1) * limit, page * limit - 1);
+
+    if (dbError) {
+      loadingError = dbError.message;
+    } else if (dbBooks) {
+      totalItems = count || 0;
       searchResults = dbBooks.map((b) => ({
         title: b.title,
         author: b.author,
@@ -127,6 +148,7 @@ export default async function DiscoverPage({
         cover_url: b.cover_url,
         page_count: b.page_count,
         genre: b.genre,
+        slug: b.slug,
       }));
     }
   }
@@ -164,6 +186,7 @@ export default async function DiscoverPage({
     }
   };
 
+  const totalPages = Math.ceil(totalItems / limit);
   const username = profile?.username || user?.email?.split("@")[0] || "";
   const displayName = profile?.display_name || username;
 
@@ -218,8 +241,8 @@ export default async function DiscoverPage({
 
         {/* Success Alert */}
         {message && (
-          <div className="p-4 rounded-lg bg-emerald-950/40 border border-emerald-900/50 flex items-center gap-2 text-emerald-200 text-sm text-left">
-            <CheckCircle className="w-5 h-5 shrink-0" />
+          <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-250 text-emerald-850 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-200 flex items-center gap-2 text-sm text-left shadow-sm">
+            <CheckCircle className="w-5 h-5 shrink-0 text-emerald-600 dark:text-emerald-400" />
             <span>{message}</span>
           </div>
         )}
@@ -243,6 +266,38 @@ export default async function DiscoverPage({
             Search
           </button>
         </form>
+
+        {/* Genre Filters Row */}
+        <div className="flex flex-wrap items-center gap-2 border-b border-ink-850 pb-4 text-left">
+          <span className="text-xs font-semibold text-parchment-500 uppercase tracking-widest mr-2">
+            Filter Genre:
+          </span>
+          {[
+            { label: "All Genres", value: "" },
+            { label: "Fiction", value: "Fiction" },
+            { label: "Science Fiction", value: "Science Fiction" },
+            { label: "Fantasy", value: "Fantasy" },
+            { label: "Romance", value: "Romance" },
+            { label: "History", value: "History" },
+            { label: "Biography", value: "Biography" },
+          ].map((g) => {
+            const isActive = selectedGenre === g.value;
+            const linkUrl = `/discover?q=${encodeURIComponent(query)}&genre=${encodeURIComponent(g.value)}&page=1`;
+            return (
+              <Link
+                key={g.label}
+                href={linkUrl}
+                className={`text-xs px-3.5 py-1.5 rounded-full border transition-all duration-200 ${
+                  isActive
+                    ? "bg-amber-500/10 border-amber-500/50 text-amber-500 font-bold"
+                    : "bg-ink-900 border-ink-850 text-parchment-500 hover:text-parchment-100 hover:border-ink-800"
+                }`}
+              >
+                {g.label}
+              </Link>
+            );
+          })}
+        </div>
 
         {/* Books Grid */}
         <div className="space-y-6 text-left">
@@ -272,38 +327,44 @@ export default async function DiscoverPage({
                   ? currentStatus.replace(/_/g, " ")
                   : null;
 
+                const bookDetailUrl = `/book/${book.slug || book.open_library_id}`;
+
                 return (
                   <div
                     key={i}
                     className="bg-ink-900 border border-ink-800 rounded-xl p-5 flex flex-col justify-between shadow-lg hover:border-ink-700 transition-all hover:translate-y-[-2px] duration-300"
                   >
                     <div className="space-y-4">
-                      {/* Cover Preview (2:3 aspect) */}
-                      <div className="relative aspect-[2/3] w-32 mx-auto rounded-lg overflow-hidden border border-ink-800 bg-ink-950 shadow-md">
-                        {book.cover_url ? (
-                          <Image
-                            src={book.cover_url}
-                            alt={`Cover of ${book.title}`}
-                            fill
-                            sizes="128px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center text-parchment-500 text-[10px] p-2 text-center font-sans leading-tight">
-                            {book.title}
-                          </div>
-                        )}
-                      </div>
+                      {/* Cover & Info Link */}
+                      <Link href={bookDetailUrl} className="block group/cover space-y-4">
+                        {/* Cover Preview (2:3 aspect) */}
+                        <div className="relative aspect-[2/3] w-32 mx-auto rounded-lg overflow-hidden border border-ink-800 bg-ink-950 shadow-md group-hover/cover:border-amber-500/50 transition-all">
+                          {book.cover_url ? (
+                            <Image
+                              src={book.cover_url}
+                              alt={`Cover of ${book.title}`}
+                              fill
+                              sizes="128px"
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="absolute inset-0 flex items-center justify-center text-parchment-500 text-[10px] p-2 text-center font-sans leading-tight">
+                              {book.title}
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="text-center space-y-1">
-                        <div className="flex items-center justify-center gap-2">
-                          <h3 className="font-sans font-bold text-parchment-100 text-sm line-clamp-1">
+                        <div className="text-center space-y-1">
+                          <h3 className="font-sans font-bold text-parchment-100 text-sm line-clamp-1 group-hover/cover:text-amber-500 transition-colors">
                             {book.title}
                           </h3>
+                          <p className="text-xs text-parchment-300 line-clamp-1">
+                            {book.author}
+                          </p>
                         </div>
-                        <p className="text-xs text-parchment-300 line-clamp-1">
-                          {book.author}
-                        </p>
+                      </Link>
+
+                      <div className="text-center space-y-1">
                         <p className="text-[10px] text-parchment-500">
                           {book.page_count} pages • {book.genre}
                         </p>
@@ -408,6 +469,37 @@ export default async function DiscoverPage({
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-4 pt-6 border-t border-ink-850">
+              <Link
+                href={page > 1 ? `/discover?q=${encodeURIComponent(query)}&genre=${encodeURIComponent(selectedGenre)}&page=${page - 1}` : "#"}
+                className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  page > 1
+                    ? "bg-ink-900 border-ink-800 text-parchment-100 hover:bg-ink-800 cursor-pointer"
+                    : "opacity-40 pointer-events-none text-parchment-500 border-ink-850"
+                }`}
+                aria-disabled={page <= 1}
+              >
+                Previous
+              </Link>
+              <span className="text-xs text-parchment-500 font-semibold uppercase tracking-wider">
+                Page {page} of {totalPages}
+              </span>
+              <Link
+                href={page < totalPages ? `/discover?q=${encodeURIComponent(query)}&genre=${encodeURIComponent(selectedGenre)}&page=${page + 1}` : "#"}
+                className={`px-4 py-2 rounded-lg text-xs font-bold border transition-all ${
+                  page < totalPages
+                    ? "bg-ink-900 border-ink-800 text-parchment-100 hover:bg-ink-800 cursor-pointer"
+                    : "opacity-40 pointer-events-none text-parchment-500 border-ink-850"
+                }`}
+                aria-disabled={page >= totalPages}
+              >
+                Next
+              </Link>
             </div>
           )}
         </div>

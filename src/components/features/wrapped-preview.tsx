@@ -157,7 +157,7 @@ export default function WrappedPreview() {
               y="0"
               width={`${sciFiWidth}%`}
               height="100%"
-              fill="#E6A62E"
+              fill="#059669"
             />
             {/* Fantasy rect */}
             <rect
@@ -165,7 +165,7 @@ export default function WrappedPreview() {
               y="0"
               width={`${fantasyWidth}%`}
               height="100%"
-              fill="#F2B84B"
+              fill="#10B981"
             />
             {/* Fiction rect */}
             <rect
@@ -173,7 +173,7 @@ export default function WrappedPreview() {
               y="0"
               width={`${fictionWidth}%`}
               height="100%"
-              fill="#C4881B"
+              fill="#34D399"
             />
           </svg>
         </div>
@@ -181,19 +181,19 @@ export default function WrappedPreview() {
         {/* Chart Legend */}
         <div className="flex flex-wrap justify-between items-center gap-4 text-xs font-semibold pt-2">
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-[#E6A62E] block" />
+            <span className="w-3 h-3 rounded bg-[#059669] block" />
             <span className="text-parchment-300">
               Sci-Fi ({Math.round(sciFiWidth)}%)
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-[#F2B84B] block" />
+            <span className="w-3 h-3 rounded bg-[#10B981] block" />
             <span className="text-parchment-300">
               Fantasy ({Math.round(fantasyWidth)}%)
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded bg-[#C4881B] block" />
+            <span className="w-3 h-3 rounded bg-[#34D399] block" />
             <span className="text-parchment-300">
               Fiction ({Math.round(fictionWidth)}%)
             </span>

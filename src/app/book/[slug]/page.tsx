@@ -14,11 +14,56 @@ export default async function PublicBookPage({
   const supabase = await createClient();
 
   // 1. Fetch book details
-  const { data: book } = await supabase
+  let book = null;
+  const { data: dbBook } = await supabase
     .from("books")
     .select("*")
-    .eq("slug", slug)
+    .or(`slug.eq.${slug},open_library_id.eq.${slug}`)
     .maybeSingle();
+
+  book = dbBook;
+
+  // If not found in database, check if it's an Open Library ID and seed it dynamically
+  if (!book && (slug.startsWith("OL") || slug.match(/^[A-Za-z0-9]+$/))) {
+    try {
+      const res = await fetch(`https://openlibrary.org/works/${slug}.json`);
+      if (res.ok) {
+        const data = await res.json();
+        let authorName = "Unknown Author";
+
+        if (data.authors?.[0]?.author?.key) {
+          const authorRes = await fetch(`https://openlibrary.org${data.authors[0].author.key}.json`);
+          if (authorRes.ok) {
+            const authorData = await authorRes.json();
+            authorName = authorData.name || authorData.personal_name || "Unknown Author";
+          }
+        }
+
+        const coverId = data.covers?.[0];
+        const coverUrl = coverId ? `https://covers.openlibrary.org/b/id/${coverId}-L.jpg` : null;
+
+        const { data: insertedBook, error: insertError } = await supabase
+          .from("books")
+          .insert({
+            title: data.title,
+            author: authorName,
+            open_library_id: slug,
+            cover_url: coverUrl,
+            page_count: data.number_of_pages || data.number_of_pages_median || 200,
+            genre: data.subjects?.[0] || "Fiction",
+            slug: slug.toLowerCase(),
+          })
+          .select()
+          .single();
+
+        if (!insertError && insertedBook) {
+          book = insertedBook;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to seed book from Open Library dynamically:", e);
+    }
+  }
 
   if (!book) {
     notFound();
@@ -189,29 +234,39 @@ export default async function PublicBookPage({
                       action={handleAddToShelfAction}
                       className="flex flex-col gap-3"
                     >
-                      <label
-                        htmlFor="status-select"
-                        className="text-xs text-parchment-500 uppercase font-semibold tracking-wider"
-                      >
+                      <span className="text-xs text-parchment-500 uppercase font-semibold tracking-wider text-left">
                         Add to Shelf
-                      </label>
-                      <div className="flex gap-2">
-                        <select
-                          id="status-select"
-                          name="status"
-                          defaultValue="want_to_read"
-                          className="flex-1 bg-ink-950 border border-ink-800 rounded-lg px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-amber-500/50"
-                        >
-                          <option value="want_to_read">Want to Read</option>
-                          <option value="reading">Reading</option>
-                          <option value="finished">Finished</option>
-                        </select>
+                      </span>
+                      <div className="flex flex-col gap-3">
+                        <div className="flex gap-2" role="radiogroup" aria-label="Shelf status selector">
+                          {[
+                            { value: "want_to_read", label: "Wishlist" },
+                            { value: "reading", label: "Reading" },
+                            { value: "finished", label: "Finished" },
+                          ].map((opt) => (
+                            <label
+                              key={opt.value}
+                              className="flex-1 text-center py-2.5 rounded-lg text-xs font-semibold border cursor-pointer select-none transition-all
+                                has-[:checked]:bg-amber-500/10 has-[:checked]:border-amber-500/40 has-[:checked]:text-amber-500
+                                bg-ink-950 border-ink-850 text-parchment-500 hover:text-parchment-300"
+                            >
+                              <input
+                                type="radio"
+                                name="status"
+                                value={opt.value}
+                                defaultChecked={opt.value === "want_to_read"}
+                                className="sr-only"
+                              />
+                              {opt.label}
+                            </label>
+                          ))}
+                        </div>
                         <button
                           type="submit"
-                          className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-semibold px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                          className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-semibold w-full py-2.5 rounded-lg text-sm transition-all flex items-center justify-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
                         >
                           <Plus className="w-4 h-4" />
-                          Add
+                          Add to Shelf
                         </button>
                       </div>
                     </form>
