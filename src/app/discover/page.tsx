@@ -1,9 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, Compass, Plus, CheckCircle } from "lucide-react";
+import { Search, Compass, Plus, CheckCircle, BookOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { addToShelf } from "@/app/app/shelf/actions";
+import Nav from "@/components/nav";
+import ThemeToggle from "@/components/theme-toggle";
 
 interface OpenLibraryBook {
   title: string;
@@ -27,7 +29,43 @@ export default async function DiscoverPage({
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  // 2. Fetch books from Open Library if query is provided
+  // 2. Fetch profile info if logged in
+  let profile = null;
+  const userBookStatusMap: Record<string, string> = {};
+
+  if (user) {
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("username, display_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    profile = p;
+
+    // Fetch user shelves to know status of books
+    const { data: userShelves } = await supabase
+      .from("shelves")
+      .select(`
+        status,
+        books (
+          open_library_id
+        )
+      `)
+      .eq("user_id", user.id);
+
+    if (userShelves) {
+      (userShelves as unknown as Array<{
+        status: string;
+        books: { open_library_id: string } | null;
+      }>).forEach((s) => {
+        const olId = s.books?.open_library_id;
+        if (olId) {
+          userBookStatusMap[olId] = s.status;
+        }
+      });
+    }
+  }
+
+  // 3. Fetch books from database (if query is empty) or Open Library (if searched)
   let searchResults: OpenLibraryBook[] = [];
   let loadingError = "";
 
@@ -35,7 +73,7 @@ export default async function DiscoverPage({
     try {
       const res = await fetch(
         `https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=9`,
-        { next: { revalidate: 3600 } } // cache search query results for 1 hour
+        { next: { revalidate: 3600 } } // cache search results for 1 hour
       );
       if (!res.ok) {
         throw new Error("Failed to fetch from Open Library API");
@@ -66,9 +104,26 @@ export default async function DiscoverPage({
     } catch (err: unknown) {
       loadingError = (err as Error).message || "An error occurred while searching.";
     }
+  } else {
+    // Show 9 popular seeded books from the database when search query is empty
+    const { data: dbBooks } = await supabase
+      .from("books")
+      .select("*")
+      .limit(9);
+
+    if (dbBooks) {
+      searchResults = dbBooks.map((b) => ({
+        title: b.title,
+        author: b.author,
+        open_library_id: b.open_library_id,
+        cover_url: b.cover_url,
+        page_count: b.page_count,
+        genre: b.genre,
+      }));
+    }
   }
 
-  // 3. Handle Add to Shelf action inside Server Action
+  // 4. Handle Add/Update Status Action
   const handleAddToShelf = async (formData: FormData) => {
     "use server";
     const openLibraryId = formData.get("open_library_id") as string;
@@ -92,19 +147,50 @@ export default async function DiscoverPage({
     );
 
     if (res.success) {
-      // Redirect with a success notification param
       const encodedQuery = encodeURIComponent(query);
-      const successMsg = encodeURIComponent(`"${title}" added to your shelf!`);
+      const successMsg = encodeURIComponent(`"${title}" shelf status updated!`);
       return redirect(`/discover?q=${encodedQuery}&message=${successMsg}`);
     }
   };
 
+  const username = profile?.username || user?.email?.split("@")[0] || "";
+  const displayName = profile?.display_name || username;
+
   return (
-    <main className="text-parchment-100 min-h-screen pb-12">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-ink-900 border border-ink-800 text-amber-500 flex items-center justify-center shadow-[0_0_15px_rgba(230,166,46,0.05)]">
+    <div className="min-h-screen bg-ink-950 text-parchment-100 flex flex-col">
+      {/* Dynamic Header */}
+      {user && profile ? (
+        <Nav username={username} displayName={displayName} />
+      ) : (
+        <nav className="sticky top-0 z-50 bg-ink-900/85 backdrop-blur-md border-b border-ink-800 px-4 md:px-8 py-4">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="w-10 h-10 rounded-full bg-ink-950 border border-ink-800 text-amber-500 flex items-center justify-center shadow-md">
+                <BookOpen className="w-5 h-5" />
+              </div>
+              <span className="font-serif text-xl font-bold tracking-wide text-parchment-100">
+                Orbit
+              </span>
+            </Link>
+
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <Link
+                href="/login"
+                className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-bold px-4 py-1.5 rounded-lg text-xs tracking-wide transition-all shadow"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
+        </nav>
+      )}
+
+      {/* Main Discover Layout */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8">
+        {/* Title */}
+        <div className="flex items-center gap-3 text-left">
+          <div className="w-12 h-12 rounded-xl bg-ink-900 border border-ink-800 text-amber-500 flex items-center justify-center shadow-md">
             <Compass className="w-6 h-6" />
           </div>
           <div>
@@ -112,14 +198,14 @@ export default async function DiscoverPage({
               Discover Books
             </h1>
             <p className="text-sm text-parchment-500">
-              Search the Open Library catalog and add books to your shelf
+              {query ? "Explore Open Library matches" : "Trending volumes and community favorites"}
             </p>
           </div>
         </div>
 
         {/* Success Alert */}
         {message && (
-          <div className="p-4 rounded-lg bg-emerald-950/40 border border-emerald-900/50 flex items-center gap-2 text-emerald-200 text-sm">
+          <div className="p-4 rounded-lg bg-emerald-950/40 border border-emerald-900/50 flex items-center gap-2 text-emerald-200 text-sm text-left">
             <CheckCircle className="w-5 h-5 shrink-0" />
             <span>{message}</span>
           </div>
@@ -145,28 +231,33 @@ export default async function DiscoverPage({
           </button>
         </form>
 
-        {/* Search Results Grid */}
-        {query && (
-          <div className="space-y-6">
-            <h2 className="text-xs font-semibold text-parchment-500 uppercase tracking-widest">
-              Search Results for &ldquo;{query}&rdquo;
-            </h2>
+        {/* Books Grid */}
+        <div className="space-y-6 text-left">
+          <h2 className="text-xs font-semibold text-parchment-500 uppercase tracking-widest">
+            {query ? `Search Results for "${query}"` : "Featured Reading Selections"}
+          </h2>
 
-            {loadingError && (
-              <p className="text-red-400 text-sm py-4">{loadingError}</p>
-            )}
+          {loadingError && (
+            <p className="text-red-400 text-sm py-4">{loadingError}</p>
+          )}
 
-            {searchResults.length === 0 && !loadingError && (
-              <div className="text-center py-12 rounded-xl bg-ink-900 border border-ink-800 border-dashed">
-                <p className="text-parchment-500 text-sm">
-                  No books found matching your query. Try another search.
-                </p>
-              </div>
-            )}
+          {searchResults.length === 0 && !loadingError && (
+            <div className="text-center py-12 rounded-xl bg-ink-900 border border-ink-800 border-dashed">
+              <p className="text-parchment-500 text-sm">
+                No books found matching your query. Try another search.
+              </p>
+            </div>
+          )}
 
-            {searchResults.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {searchResults.map((book, i) => (
+          {searchResults.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {searchResults.map((book, i) => {
+                const currentStatus = userBookStatusMap[book.open_library_id];
+                const cleanStatusLabel = currentStatus
+                  ? currentStatus.replace(/_/g, " ")
+                  : null;
+
+                return (
                   <div
                     key={i}
                     className="bg-ink-900 border border-ink-800 rounded-xl p-5 flex flex-col justify-between shadow-lg hover:border-ink-700 transition-all hover:translate-y-[-2px] duration-300"
@@ -190,22 +281,31 @@ export default async function DiscoverPage({
                       </div>
 
                       <div className="text-center space-y-1">
-                        <h3 className="font-serif font-bold text-parchment-100 text-sm line-clamp-1">
-                          {book.title}
-                        </h3>
+                        <div className="flex items-center justify-center gap-2">
+                          <h3 className="font-serif font-bold text-parchment-100 text-sm line-clamp-1">
+                            {book.title}
+                          </h3>
+                        </div>
                         <p className="text-xs text-parchment-300 line-clamp-1">
                           {book.author}
                         </p>
                         <p className="text-[10px] text-parchment-500">
                           {book.page_count} pages • {book.genre}
                         </p>
+                        
+                        {/* Shelf status indicator badge */}
+                        {cleanStatusLabel && (
+                          <div className="inline-flex mt-1 text-[9px] font-semibold bg-amber-500/10 border border-amber-500/25 text-amber-500 px-2 py-0.5 rounded uppercase tracking-wider">
+                            On Shelf: {cleanStatusLabel}
+                          </div>
+                        )}
                       </div>
                     </div>
 
                     {/* Shelf Controls */}
                     <div className="mt-5 pt-4 border-t border-ink-850">
                       {user ? (
-                        <form action={handleAddToShelf} className="flex flex-col gap-2">
+                        <form action={handleAddToShelf} className="flex flex-col gap-3">
                           <input type="hidden" name="open_library_id" value={book.open_library_id} />
                           <input type="hidden" name="title" value={book.title} />
                           <input type="hidden" name="author" value={book.author} />
@@ -213,39 +313,55 @@ export default async function DiscoverPage({
                           <input type="hidden" name="page_count" value={book.page_count} />
                           <input type="hidden" name="genre" value={book.genre} />
 
-                          <select
-                            name="status"
-                            defaultValue="want_to_read"
-                            className="w-full bg-ink-950 border border-ink-800 rounded-lg px-2 py-1.5 text-xs text-parchment-300 focus:outline-none focus:border-amber-500/50"
-                          >
-                            <option value="want_to_read">Want to Read</option>
-                            <option value="reading">Reading</option>
-                            <option value="finished">Finished</option>
-                          </select>
+                          {/* Horizontal Radio Button Row */}
+                          <div className="flex gap-1.5" role="radiogroup" aria-label="Shelf status selector">
+                            {[
+                              { value: "want_to_read", label: "Wishlist" },
+                              { value: "reading", label: "Reading" },
+                              { value: "finished", label: "Finished" },
+                            ].map((opt) => (
+                              <label
+                                key={opt.value}
+                                className="flex-1 text-center py-1.5 rounded-lg text-[9px] font-semibold border cursor-pointer select-none transition-all
+                                  has-[:checked]:bg-amber-500/10 has-[:checked]:border-amber-500/40 has-[:checked]:text-amber-500
+                                  bg-ink-950 border-ink-850 text-parchment-500 hover:text-parchment-300"
+                              >
+                                <input
+                                  type="radio"
+                                  name="status"
+                                  value={opt.value}
+                                  defaultChecked={currentStatus ? currentStatus === opt.value : opt.value === "want_to_read"}
+                                  className="sr-only"
+                                />
+                                {opt.label}
+                              </label>
+                            ))}
+                          </div>
+
                           <button
                             type="submit"
-                            className="w-full bg-ink-800 hover:bg-amber-500 hover:text-ink-950 text-parchment-100 border border-ink-850 hover:border-transparent py-1.5 rounded-lg text-xs font-semibold transition-all focus:outline-none flex items-center justify-center gap-1 cursor-pointer"
+                            className="w-full bg-ink-800 hover:bg-amber-500 hover:text-ink-950 text-parchment-100 border border-ink-850 hover:border-transparent py-2 rounded-lg text-xs font-semibold transition-all focus:outline-none flex items-center justify-center gap-1 cursor-pointer"
                           >
                             <Plus className="w-3.5 h-3.5" />
-                            Add to Shelf
+                            {currentStatus ? "Update Status" : "Add to Shelf"}
                           </button>
                         </form>
                       ) : (
                         <Link
                           href="/login"
-                          className="w-full bg-ink-800 hover:bg-ink-750 text-parchment-300 hover:text-parchment-100 py-2 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 border border-ink-850"
+                          className="w-full bg-ink-800 hover:bg-ink-750 text-parchment-300 hover:text-parchment-100 py-2.5 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1 border border-ink-850"
                         >
                           Sign In to Add
                         </Link>
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </main>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 }

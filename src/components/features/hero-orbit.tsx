@@ -10,10 +10,36 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
+const COVER_IMAGES = [
+  "https://covers.openlibrary.org/b/id/8286708-L.jpg", // The Hobbit
+  "https://covers.openlibrary.org/b/id/12818862-L.jpg", // 1984
+  "https://covers.openlibrary.org/b/id/8225266-L.jpg", // Mockingbird
+  "https://covers.openlibrary.org/b/id/10174092-L.jpg", // Dune
+  "https://covers.openlibrary.org/b/id/8345719-L.jpg", // Neuromancer
+];
+
 // 1. Stylized 3D Open Book Component
 function StylizedBook() {
   const groupRef = useRef<THREE.Group>(null);
   const prefersReducedMotion = useReducedMotion();
+  const [leftTex, setLeftTex] = useState<THREE.Texture | null>(null);
+  const [rightTex, setRightTex] = useState<THREE.Texture | null>(null);
+
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    const leftUrl = COVER_IMAGES[Math.floor(Math.random() * COVER_IMAGES.length)];
+    const rightUrl = COVER_IMAGES[Math.floor(Math.random() * COVER_IMAGES.length)];
+
+    loader.load(leftUrl, (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      setLeftTex(tex);
+    });
+
+    loader.load(rightUrl, (tex) => {
+      tex.colorSpace = THREE.SRGBColorSpace;
+      setRightTex(tex);
+    });
+  }, []);
 
   // Gentle floating animation
   useFrame((state) => {
@@ -29,12 +55,12 @@ function StylizedBook() {
       <group position={[-0.75, 0, 0]} rotation={[0, 0.25, 0]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[1.4, 2, 0.06]} />
-          <meshBasicMaterial color="#141210" />
+          <meshBasicMaterial color="#0B0908" />
         </mesh>
         {/* Wireframe Outline */}
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(1.4, 2, 0.06)]} />
-          <lineBasicMaterial color="#E6A62E" linewidth={1.5} />
+          <lineBasicMaterial color="#10B981" linewidth={1.5} />
         </lineSegments>
       </group>
 
@@ -42,12 +68,12 @@ function StylizedBook() {
       <group position={[0.75, 0, 0]} rotation={[0, -0.25, 0]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[1.4, 2, 0.06]} />
-          <meshBasicMaterial color="#141210" />
+          <meshBasicMaterial color="#0B0908" />
         </mesh>
         {/* Wireframe Outline */}
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(1.4, 2, 0.06)]} />
-          <lineBasicMaterial color="#E6A62E" linewidth={1.5} />
+          <lineBasicMaterial color="#10B981" linewidth={1.5} />
         </lineSegments>
       </group>
 
@@ -55,7 +81,16 @@ function StylizedBook() {
       <group position={[-0.68, 0, 0.04]} rotation={[0, 0.2, 0]}>
         <mesh>
           <boxGeometry args={[1.25, 1.9, 0.04]} />
-          <meshBasicMaterial color="#F4EDE2" />
+          <meshBasicMaterial attach="material-0" color="#0B0908" />
+          <meshBasicMaterial attach="material-1" color="#0B0908" />
+          <meshBasicMaterial attach="material-2" color="#0B0908" />
+          <meshBasicMaterial attach="material-3" color="#0B0908" />
+          {leftTex ? (
+            <meshBasicMaterial attach="material-4" map={leftTex} />
+          ) : (
+            <meshBasicMaterial attach="material-4" color="#0F1A15" />
+          )}
+          <meshBasicMaterial attach="material-5" color="#0B0908" />
         </mesh>
       </group>
 
@@ -63,7 +98,16 @@ function StylizedBook() {
       <group position={[0.68, 0, 0.04]} rotation={[0, -0.2, 0]}>
         <mesh>
           <boxGeometry args={[1.25, 1.9, 0.04]} />
-          <meshBasicMaterial color="#F4EDE2" />
+          <meshBasicMaterial attach="material-0" color="#0B0908" />
+          <meshBasicMaterial attach="material-1" color="#0B0908" />
+          <meshBasicMaterial attach="material-2" color="#0B0908" />
+          <meshBasicMaterial attach="material-3" color="#0B0908" />
+          {rightTex ? (
+            <meshBasicMaterial attach="material-4" map={rightTex} />
+          ) : (
+            <meshBasicMaterial attach="material-4" color="#0F1A15" />
+          )}
+          <meshBasicMaterial attach="material-5" color="#0B0908" />
         </mesh>
       </group>
     </group>
@@ -226,10 +270,10 @@ export default function HeroOrbit() {
 
   // Data for orbiting moon spheres
   const moonsData = [
-    { radius: 1.8, speed: 0.8, color: "#F2B84B", tiltX: 0.25, tiltZ: 0.1, initialAngle: 0 },
-    { radius: 2.3, speed: 0.5, color: "#E6A62E", tiltX: -0.15, tiltZ: 0.35, initialAngle: Math.PI / 2 },
-    { radius: 2.8, speed: 0.3, color: "#C4881B", tiltX: 0.35, tiltZ: -0.15, initialAngle: Math.PI },
-    { radius: 3.4, speed: 0.2, color: "#F2B84B", tiltX: -0.05, tiltZ: 0.2, initialAngle: (3 * Math.PI) / 2 },
+    { radius: 1.8, speed: 0.8, color: "#10B981", tiltX: 0.25, tiltZ: 0.1, initialAngle: 0 },
+    { radius: 2.3, speed: 0.5, color: "#34D399", tiltX: -0.15, tiltZ: 0.35, initialAngle: Math.PI / 2 },
+    { radius: 2.8, speed: 0.3, color: "#059669", tiltX: 0.35, tiltZ: -0.15, initialAngle: Math.PI },
+    { radius: 3.4, speed: 0.2, color: "#10B981", tiltX: -0.05, tiltZ: 0.2, initialAngle: (3 * Math.PI) / 2 },
   ];
 
   return (
@@ -247,7 +291,7 @@ export default function HeroOrbit() {
         >
           <color attach="background" args={["#0B0908"]} />
           <ambientLight intensity={0.2} />
-          <pointLight position={[5, 5, 5]} intensity={0.8} color="#F2B84B" />
+          <pointLight position={[5, 5, 5]} intensity={0.8} color="#10B981" />
           
           <StylizedBook />
           

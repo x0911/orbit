@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { BookOpen, Compass, Sparkles, Flame, ArrowRight } from "lucide-react";
@@ -8,6 +9,8 @@ import ProgressRings from "@/components/features/progress-rings";
 import FriendsFeedMockup from "@/components/features/friends-feed-mockup";
 import WrappedPreview from "@/components/features/wrapped-preview";
 import Magnet from "@/components/Magnet";
+import { createClient } from "@/lib/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 // Dynamically import the Three.js Orbit centerpiece so it doesn't block initial page paint (LCP)
 const HeroOrbit = dynamic(() => import("@/components/features/hero-orbit"), {
@@ -20,6 +23,15 @@ const HeroOrbit = dynamic(() => import("@/components/features/hero-orbit"), {
 });
 
 export default function HomePage() {
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
+
   return (
     <div className="bg-ink-950 text-parchment-100 min-h-screen relative font-sans selection:bg-amber-500/20 selection:text-amber-400">
       {/* 1. Hero Section - WebGL centerpiece + HTML text layer */}
@@ -43,10 +55,10 @@ export default function HomePage() {
             </Link>
 
             <Link
-              href="/login"
+              href={user ? "/app/shelf" : "/login"}
               className="bg-ink-900/80 hover:bg-ink-850 text-parchment-300 hover:text-parchment-100 border border-ink-800 hover:border-amber-500/20 px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all pointer-events-auto shadow-md"
             >
-              Sign In
+              {user ? "Dashboard" : "Sign In"}
             </Link>
           </div>
 
@@ -68,10 +80,10 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row gap-3 pointer-events-auto">
               <Link
-                href="/login"
+                href={user ? "/app/shelf" : "/login"}
                 className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-bold px-6 py-3 rounded-xl text-sm shadow-lg hover:shadow-amber-500/10 transition-all flex items-center justify-center gap-1.5 focus:outline-none"
               >
-                Try Demo Account
+                {user ? "Go to Dashboard" : "Try Demo Account"}
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
@@ -165,11 +177,11 @@ export default function HomePage() {
           <div className="flex justify-center">
             <Magnet magnetStrength={3} padding={80}>
               <Link
-                href="/login"
+                href={user ? "/app/shelf" : "/login"}
                 className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-bold px-8 py-3.5 rounded-xl text-sm shadow-xl hover:shadow-amber-500/20 transition-all inline-flex items-center gap-1.5 focus:outline-none animate-pulse"
               >
                 <Flame className="w-4 h-4 fill-current animate-pulse" />
-                Launch Demo Account
+                {user ? "Open Dashboard" : "Launch Demo Account"}
               </Link>
             </Magnet>
           </div>

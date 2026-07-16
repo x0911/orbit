@@ -43,19 +43,19 @@ const config: Config = {
           foreground: "var(--popover-foreground)",
         },
         ink: {
-          950: "#0B0908", // near-black espresso background
-          900: "#141210",
-          800: "#1E1B18",
+          950: "var(--ink-950)",
+          900: "var(--ink-900)",
+          800: "var(--ink-800)",
         },
         amber: {
-          400: "#F2B84B",
-          500: "#E6A62E", // primary accent
-          600: "#C4881B",
+          400: "var(--accent-light)",
+          500: "var(--accent-DEFAULT)",
+          600: "var(--accent-dark)",
         },
         parchment: {
-          100: "#F4EDE2", // primary text on dark
-          300: "#D8CCB8",
-          500: "#9C8F7A", // secondary/muted text
+          100: "var(--parchment-100)",
+          300: "var(--parchment-300)",
+          500: "var(--parchment-500)",
         },
       },
       borderRadius: {

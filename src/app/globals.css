@@ -2,35 +2,61 @@
 @config "../../tailwind.config.ts";
 
 :root {
-  --background: #0B0908; /* ink-950 */
-  --foreground: #F4EDE2; /* parchment-100 */
+  --ink-950: #060B08; /* deep dark forest ink background */
+  --ink-900: #0D1410; /* forest card background */
+  --ink-800: #17241E; /* forest borders */
+  
+  --accent-light: #34D399; /* emerald 400 */
+  --accent-DEFAULT: #10B981; /* emerald 500 */
+  --accent-dark: #059669; /* emerald 600 */
 
-  --card: #141210; /* ink-900 */
-  --card-foreground: #F4EDE2; /* parchment-100 */
+  --parchment-100: #ECFDF5; /* emerald-50 light cream text */
+  --parchment-300: #D1FAE5;
+  --parchment-500: #6EE7B7; /* soft sage muted text */
 
-  --popover: #141210; /* ink-900 */
-  --popover-foreground: #F4EDE2; /* parchment-100 */
+  --background: var(--ink-950);
+  --foreground: var(--parchment-100);
 
-  --primary: #E6A62E; /* amber-500 */
-  --primary-foreground: #0B0908; /* ink-950 */
+  --card: var(--ink-900);
+  --card-foreground: var(--parchment-100);
 
-  --secondary: #1E1B18; /* ink-800 */
-  --secondary-foreground: #F4EDE2; /* parchment-100 */
+  --popover: var(--ink-900);
+  --popover-foreground: var(--parchment-100);
 
-  --muted: #1E1B18; /* ink-800 */
-  --muted-foreground: #9C8F7A; /* parchment-500 */
+  --primary: var(--accent-DEFAULT);
+  --primary-foreground: var(--ink-950);
 
-  --accent: #1E1B18; /* ink-800 */
-  --accent-foreground: #F4EDE2; /* parchment-100 */
+  --secondary: var(--ink-800);
+  --secondary-foreground: var(--parchment-100);
 
-  --destructive: #7F1D1D; /* dark red background */
-  --destructive-foreground: #FEE2E2; /* light red text */
+  --muted: var(--ink-800);
+  --muted-foreground: var(--parchment-500);
 
-  --border: #1E1B18; /* ink-800 */
-  --input: #1E1B18; /* ink-800 */
-  --ring: #E6A62E; /* amber-500 */
+  --accent: var(--ink-800);
+  --accent-foreground: var(--parchment-100);
+
+  --destructive: #7F1D1D;
+  --destructive-foreground: #FEE2E2;
+
+  --border: var(--ink-800);
+  --input: var(--ink-800);
+  --ring: var(--accent-DEFAULT);
 
   --radius: 0.5rem;
+}
+
+.light {
+  --ink-950: #F4FAF7; /* soft light cream-mint background */
+  --ink-900: #E6F4ED; /* light card background */
+  --ink-800: #D2EDDE; /* light border */
+
+  --accent-light: #059669; /* emerald 600 */
+  --accent-DEFAULT: #047857; /* emerald 700 - dark green for readability */
+  --accent-dark: #065F46; /* emerald 800 */
+
+  --parchment-100: #062F1E; /* deep forest text */
+  --parchment-300: #0A3C27;
+  --parchment-500: #047857; /* readable muted green text */
 }
 
 body {

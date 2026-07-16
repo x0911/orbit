@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ChevronLeft, Plus, Trash2, Calendar, BookOpen, PenTool } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { logProgress, saveReview, removeFromShelf } from "@/app/app/shelf/actions";
+import InteractiveStars from "@/components/features/interactive-stars";
 
 interface ReadingLog {
   id: string;
@@ -254,19 +255,7 @@ export default async function AuthenticatedBookPage({
                     <label htmlFor="rating-select" className="block text-xs font-semibold text-parchment-500 uppercase tracking-wider mb-2">
                       Star Rating
                     </label>
-                    <select
-                      id="rating-select"
-                      name="rating"
-                      required
-                      defaultValue={review?.rating || 5}
-                      className="w-full max-w-[150px] bg-ink-950 border border-ink-850 rounded-lg px-3 py-2 text-sm text-parchment-100 focus:outline-none focus:border-amber-500/50"
-                    >
-                      <option value={5}>5 Stars (Excellent)</option>
-                      <option value={4}>4 Stars (Good)</option>
-                      <option value={3}>3 Stars (Average)</option>
-                      <option value={2}>2 Stars (Poor)</option>
-                      <option value={1}>1 Star (Terrible)</option>
-                    </select>
+                    <InteractiveStars name="rating" defaultValue={review?.rating || 5} />
                   </div>
 
                   <div className="text-left">

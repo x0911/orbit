@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { BookOpen, Compass, Users, LogOut, Menu, X } from "lucide-react";
 import { logout } from "@/app/login/actions";
+import ThemeToggle from "@/components/theme-toggle";
 
 export default function Nav({
   username,
@@ -63,6 +64,7 @@ export default function Nav({
 
         {/* User Actions */}
         <div className="hidden md:flex items-center gap-4">
+          <ThemeToggle />
           <div className="flex items-center gap-2 border-r border-ink-800 pr-4">
             <div className="w-8 h-8 rounded-full bg-ink-800 border border-ink-800 text-amber-500 flex items-center justify-center uppercase font-bold text-xs">
               {displayName ? displayName.charAt(0) : username.charAt(0)}
@@ -135,13 +137,16 @@ export default function Nav({
               </div>
             </div>
 
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 py-2 px-3 rounded-lg border border-red-950/20 bg-red-950/10"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-sm text-red-400 hover:text-red-300 py-2 px-3 rounded-lg border border-red-950/20 bg-red-950/10 cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </button>
+            </div>
           </div>
         </div>
       )}
