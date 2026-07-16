@@ -139,7 +139,6 @@ export default function ShelfView({
     setActionSuccess("");
     setReviewBody("");
     setTimeout(() => setAnimateModal(true), 10);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reviewMap]);
 
   // Close modal handler

@@ -66,6 +66,8 @@ export default function DiscoverClient({
   const [statusMap, setStatusMap] = useState<Record<string, string>>(
     initialStatusMap,
   );
+  // Client-selected local status map for toggling before submit
+  const [selectedStatusMap, setSelectedStatusMap] = useState<Record<string, string>>({});
   // Per-book loading / success state for shelf buttons
   const [bookLoading, setBookLoading] = useState<Record<string, boolean>>({});
   const [bookSuccess, setBookSuccess] = useState<Record<string, boolean>>({});
@@ -359,9 +361,8 @@ export default function DiscoverClient({
                             { value: "reading", label: "Reading" },
                             { value: "finished", label: "Finished" },
                           ].map((opt) => {
-                            const checked = currentStatus
-                              ? currentStatus === opt.value
-                              : opt.value === "want_to_read";
+                            const activeStatus = selectedStatusMap[olId] || currentStatus || "want_to_read";
+                            const checked = activeStatus === opt.value;
                             return (
                               <label
                                 key={opt.value}
@@ -375,9 +376,14 @@ export default function DiscoverClient({
                                   type="radio"
                                   name={`status-${olId}`}
                                   value={opt.value}
-                                  defaultChecked={checked}
+                                  checked={checked}
                                   className="sr-only"
-                                  onChange={() => {/* handled by button click */}}
+                                  onChange={() => {
+                                    setSelectedStatusMap((prev) => ({
+                                      ...prev,
+                                      [olId]: opt.value,
+                                    }));
+                                  }}
                                 />
                                 {opt.label}
                               </label>
@@ -390,24 +396,10 @@ export default function DiscoverClient({
                           type="button"
                           disabled={isLoading}
                           onClick={() => {
-                            // Read selected radio value for this book
-                            const radioGroup = document.querySelector(
-                              `#shelf-status-${olId} input[type="radio"]:checked`,
-                            ) as HTMLInputElement | null;
-                            // Fallback to the radio that has defaultChecked
-                            let selectedStatus =
-                              radioGroup?.value ||
+                            const selectedStatus =
+                              selectedStatusMap[olId] ||
                               currentStatus ||
                               "want_to_read";
-
-                            // Since we're using labels with defaultChecked (not controlled),
-                            // we need to find the visually-selected one
-                            const allRadios = document.querySelectorAll(
-                              `[name="status-${olId}"]`,
-                            ) as NodeListOf<HTMLInputElement>;
-                            allRadios.forEach((r) => {
-                              if (r.checked) selectedStatus = r.value;
-                            });
 
                             handleAddToShelf(book, selectedStatus);
                           }}
