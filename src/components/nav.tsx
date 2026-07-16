@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { BookOpen, Compass, Users, LogOut, Menu, X } from "lucide-react";
 import { logout } from "@/app/login/actions";
 import ThemeToggle from "@/components/theme-toggle";
@@ -165,8 +166,8 @@ export default function Nav({
         </div>
       )}
 
-      {/* Custom Confirmation Modal */}
-      {showLogoutModal && (
+      {/* Custom Confirmation Modal (rendered via Portal to center on viewport escaping parent sticky backdrop filter) */}
+      {showLogoutModal && typeof window !== "undefined" && createPortal(
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Backdrop overlay */}
           <div 
@@ -203,7 +204,8 @@ export default function Nav({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </nav>
   );

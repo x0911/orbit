@@ -213,9 +213,26 @@ export default function HeroOrbit() {
   const scrollProgress = useRef(0);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [inView, setInView] = useState(true);
+  const [isLight, setIsLight] = useState(false);
   const prefersReducedMotion = useReducedMotion();
 
-  // 1. Observe viewport entry to pause render loop when scrolled out
+  // 1. Monitor documentElement style classes to toggle Light/Dark WebGL backdrop
+  useEffect(() => {
+    setIsLight(document.documentElement.classList.contains("light"));
+
+    const observer = new MutationObserver(() => {
+      setIsLight(document.documentElement.classList.contains("light"));
+    });
+
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
+  // 2. Observe viewport entry to pause render loop when scrolled out
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -289,8 +306,8 @@ export default function HeroOrbit() {
           camera={{ position: [0, 0, 5], fov: 45 }}
           className="absolute inset-0 z-0 pointer-events-none"
         >
-          <color attach="background" args={["#0B0908"]} />
-          <ambientLight intensity={0.2} />
+          <color attach="background" args={[isLight ? "#F4FAF7" : "#060B08"]} />
+          <ambientLight intensity={isLight ? 0.6 : 0.2} />
           <pointLight position={[5, 5, 5]} intensity={0.8} color="#10B981" />
           
           <StylizedBook />
@@ -307,12 +324,14 @@ export default function HeroOrbit() {
             />
           ))}
 
-          <Stars radius={100} depth={50} count={350} factor={4} saturation={0.5} fade speed={0} />
+          {!isLight && (
+            <Stars radius={100} depth={50} count={350} factor={4} saturation={0.5} fade speed={0} />
+          )}
 
           <SceneController scrollProgress={scrollProgress} pointer={pointer} />
         </Canvas>
       ) : (
-        <div className="absolute inset-0 bg-[#0B0908]" />
+        <div className={`absolute inset-0 transition-colors duration-200 ${isLight ? "bg-[#F4FAF7]" : "bg-[#060B08]"}`} />
       )}
     </div>
   );
