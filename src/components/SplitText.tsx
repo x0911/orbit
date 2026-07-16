@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText as GSAPSplitText } from 'gsap/SplitText';
 import { useGSAP } from '@gsap/react';
+import { useReducedMotion } from '@/hooks/use-reduced-motion';
 
 gsap.registerPlugin(ScrollTrigger, GSAPSplitText, useGSAP);
 
@@ -37,6 +38,7 @@ const SplitText: React.FC<SplitTextProps> = ({
   textAlign = 'center',
   onLetterAnimationComplete
 }) => {
+  const prefersReducedMotion = useReducedMotion();
   const ref = useRef<HTMLParagraphElement>(null);
   const animationCompletedRef = useRef(false);
   const onCompleteRef = useRef(onLetterAnimationComplete);
@@ -102,6 +104,15 @@ const SplitText: React.FC<SplitTextProps> = ({
         reduceWhiteSpace: false,
         onSplit: (self: GSAPSplitText) => {
           assignTargets(self);
+          if (prefersReducedMotion) {
+            return gsap.set(targets, {
+              ...to,
+              onComplete: () => {
+                animationCompletedRef.current = true;
+                onCompleteRef.current?.();
+              }
+            });
+          }
           return gsap.fromTo(
             targets,
             { ...from },
@@ -162,7 +173,7 @@ const SplitText: React.FC<SplitTextProps> = ({
       willChange: 'transform, opacity'
     };
     const classes = `split-parent overflow-hidden inline-block whitespace-normal ${className}`;
-    const Tag = (tag || 'p') as React.ElementType;
+    const Tag = (tag || 'p') as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'p' | 'span';
 
     return (
       <Tag ref={ref} style={style} className={classes}>
