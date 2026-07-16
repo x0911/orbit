@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Star, Trash2, Edit3, X, ArrowRight } from "lucide-react";
@@ -27,6 +27,22 @@ interface ShelfItem {
   };
 }
 
+/** Small pulsing skeleton card shown before entrance animation */
+function SkeletonCard() {
+  return (
+    <div className="flex flex-col items-center">
+      <div
+        className="shelf-card-skeleton rounded-xl border border-ink-800"
+        style={{ width: "160px", height: "240px" }}
+      />
+      <div className="mt-3 space-y-1.5 w-full px-2">
+        <div className="shelf-card-skeleton h-2.5 rounded w-3/4 mx-auto" />
+        <div className="shelf-card-skeleton h-2 rounded w-1/2 mx-auto" />
+      </div>
+    </div>
+  );
+}
+
 export default function ShelfView({
   initialShelves,
   initialReviewMap,
@@ -40,6 +56,21 @@ export default function ShelfView({
     useState<Record<string, number>>(initialReviewMap);
   const [selectedItem, setSelectedItem] = useState<ShelfItem | null>(null);
   const [animateModal, setAnimateModal] = useState(false);
+
+  // ── Entrance animation state ───────────────────────────────────────────
+  // After mount we flip this to start the stagger cascade
+  const [isReady, setIsReady] = useState(false);
+  // Per-section visibility (driven by IntersectionObserver)
+  const [sectionVisible, setSectionVisible] = useState<[boolean, boolean, boolean]>([
+    false,
+    false,
+    false,
+  ]);
+  const sectionRefs = [
+    useRef<HTMLElement>(null),
+    useRef<HTMLElement>(null),
+    useRef<HTMLElement>(null),
+  ];
 
   // Form states in modal
   const [pagesLogValue, setPagesLogValue] = useState("");
@@ -65,8 +96,42 @@ export default function ShelfView({
     setReviewMap(initialReviewMap);
   }, [initialReviewMap]);
 
+  // ── Trigger entrance animations after first paint ──────────────────────
+  useEffect(() => {
+    // One RAF to let browser paint the skeletons first
+    const raf = requestAnimationFrame(() => {
+      setIsReady(true);
+    });
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // ── IntersectionObserver for each shelf column ─────────────────────────
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    sectionRefs.forEach((ref, idx) => {
+      if (!ref.current) return;
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            setSectionVisible((prev) => {
+              const next = [...prev] as [boolean, boolean, boolean];
+              next[idx] = true;
+              return next;
+            });
+            observer.disconnect();
+          }
+        },
+        { threshold: 0.08 }
+      );
+      observer.observe(ref.current);
+      observers.push(observer);
+    });
+    return () => observers.forEach((o) => o.disconnect());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Open modal handler
-  const handleOpenItem = async (item: ShelfItem) => {
+  const handleOpenItem = useCallback(async (item: ShelfItem) => {
     setSelectedItem(item);
     setPagesLogValue("");
     setReviewRating(reviewMap[item.books.id] || 5);
@@ -74,13 +139,14 @@ export default function ShelfView({
     setActionSuccess("");
     setReviewBody("");
     setTimeout(() => setAnimateModal(true), 10);
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewMap]);
 
   // Close modal handler
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setAnimateModal(false);
     setTimeout(() => setSelectedItem(null), 200);
-  };
+  }, []);
 
   // Escape key listener
   useEffect(() => {
@@ -91,7 +157,7 @@ export default function ShelfView({
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [handleCloseModal]);
 
   // Trap focus inside modal
   useEffect(() => {
@@ -123,7 +189,6 @@ export default function ShelfView({
       }
     };
 
-    // Delay focus slightly to ensure modal is rendered
     const timeout = setTimeout(() => {
       closeButtonRef.current?.focus();
     }, 50);
@@ -160,7 +225,7 @@ export default function ShelfView({
       setActionSuccess("Pages logged successfully!");
       setPagesLogValue("");
 
-      // Update local state instantly
+      // Update local state instantly — no page reload
       const updatedShelves = shelves.map((s) => {
         if (s.id === selectedItem.id) {
           const newPage = s.current_page + pages;
@@ -177,7 +242,6 @@ export default function ShelfView({
       });
       setShelves(updatedShelves);
 
-      // Update active selected item
       const active = updatedShelves.find((s) => s.id === selectedItem.id);
       if (active) setSelectedItem(active);
     } else {
@@ -226,19 +290,33 @@ export default function ShelfView({
     }
   };
 
-  // Card component renderer
-  const renderBookCard = (item: ShelfItem) => {
+  // ── Card renderer ──────────────────────────────────────────────────────
+  const renderBookCard = (item: ShelfItem, cardIndex: number) => {
     const book = item.books;
     const progressPct = Math.round((item.current_page / book.page_count) * 100);
     const userRating = reviewMap[book.id];
+    const delay = cardIndex * 80; // 80ms stagger per card
 
     return (
-      <div key={item.id} className="group flex flex-col items-center">
+      <div
+        key={item.id}
+        className={`group flex flex-col items-center ${
+          isReady ? "shelf-card-enter" : "opacity-0"
+        }`}
+        style={isReady ? { animationDelay: `${delay}ms` } : {}}
+      >
         <button
           onClick={() => handleOpenItem(item)}
-          className="relative text-left rounded-xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-amber-500 transition-transform hover:scale-[1.02] cursor-pointer"
+          className="relative text-left rounded-xl overflow-hidden focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all duration-300 hover:scale-[1.05] cursor-pointer group/card"
           style={{ width: "160px", height: "240px" }}
+          aria-label={`Open details for ${book.title}`}
         >
+          {/* Glow halo on hover */}
+          <span
+            className="absolute inset-0 rounded-xl pointer-events-none z-10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-300"
+            style={{ boxShadow: "0 0 20px 2px rgba(230,166,46,0.22), 0 0 40px 4px rgba(230,166,46,0.08)" }}
+          />
+
           {prefersReducedMotion ? (
             <div className="relative w-full h-full border border-ink-800 rounded-xl bg-ink-900 overflow-hidden shadow-lg">
               {book.cover_url ? (
@@ -271,7 +349,7 @@ export default function ShelfView({
             />
           )}
 
-          {/* Progress indicators overlay */}
+          {/* Progress indicator overlay */}
           {item.status === "reading" && (
             <div className="absolute bottom-2 left-2 right-2 bg-ink-950/90 border border-ink-800 rounded px-2 py-1 flex flex-col gap-1 text-[10px] z-[5] shadow-md backdrop-blur-sm">
               <div className="flex justify-between font-semibold text-parchment-300">
@@ -280,7 +358,7 @@ export default function ShelfView({
               </div>
               <div className="w-full bg-ink-800 rounded-full h-1 overflow-hidden">
                 <div
-                  className="bg-amber-500 h-full"
+                  className="bg-amber-500 h-full transition-all duration-500"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
@@ -296,7 +374,7 @@ export default function ShelfView({
         </button>
 
         <div className="mt-3 text-center w-full px-2">
-          <h4 className="font-sans font-bold text-xs text-parchment-100 line-clamp-1 group-hover:text-amber-400 transition-colors">
+          <h4 className="font-sans font-bold text-xs text-parchment-100 line-clamp-1 group-hover:text-amber-400 transition-colors duration-200">
             {book.title}
           </h4>
           <p className="text-[10px] text-parchment-500 line-clamp-1">
@@ -307,85 +385,109 @@ export default function ShelfView({
     );
   };
 
+  // ── Column section renderer ────────────────────────────────────────────
+  const renderColumn = (
+    sectionIdx: 0 | 1 | 2,
+    ref: React.RefObject<HTMLElement | null>,
+    label: string,
+    dotColor: string,
+    dotGlow: string,
+    isPulse: boolean,
+    items: ShelfItem[],
+    emptyMessage: React.ReactNode,
+  ) => {
+    const visible = sectionVisible[sectionIdx];
+    const colDelay = sectionIdx * 100; // columns stagger in
+
+    return (
+      <section
+        ref={ref as React.RefObject<HTMLElement>}
+        className={`bg-ink-900 border border-ink-800 rounded-2xl p-6 min-h-[400px] flex flex-col shadow-xl transition-all ${
+          visible ? "shelf-section-reveal" : "opacity-0"
+        }`}
+        style={visible ? { animationDelay: `${colDelay}ms` } : {}}
+      >
+        <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ink-850">
+          <span
+            className={`w-2.5 h-2.5 rounded-full ${dotColor} ${dotGlow} ${isPulse ? "animate-pulse" : ""}`}
+          />
+          <h2 className="font-sans text-lg font-bold">{label}</h2>
+          <span className="text-xs bg-ink-950 px-2 py-0.5 rounded text-parchment-500 border border-ink-850 ml-auto tabular-nums transition-all duration-300">
+            {items.length}
+          </span>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
+            {emptyMessage}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-y-6 gap-x-4 justify-items-center">
+            {/* Show skeleton cards briefly before isReady */}
+            {!isReady
+              ? items.map((item) => <SkeletonCard key={item.id} />)
+              : items.map((item, i) => renderBookCard(item, i))}
+          </div>
+        )}
+      </section>
+    );
+  };
+
   return (
     <div className="space-y-12">
       {/* Shelf Columns Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6 items-start">
-        {/* Reading Column */}
-        <section className="bg-ink-900 border border-ink-800 rounded-2xl p-6 min-h-[400px] flex flex-col shadow-xl">
-          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ink-850">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(230,166,46,0.5)] animate-pulse" />
-            <h2 className="font-sans text-lg font-bold">Currently Reading</h2>
-            <span className="text-xs bg-ink-950 px-2 py-0.5 rounded text-parchment-500 border border-ink-850 ml-auto">
-              {reading.length}
-            </span>
-          </div>
+        {renderColumn(
+          0,
+          sectionRefs[0],
+          "Currently Reading",
+          "bg-amber-500",
+          "shadow-[0_0_8px_rgba(230,166,46,0.5)]",
+          true,
+          reading,
+          <>
+            <p className="text-sm text-parchment-500 max-w-xs mb-4">
+              No books here. Discover new reads or move a book here to start
+              tracking!
+            </p>
+            <Link
+              href="/discover"
+              className="inline-flex items-center gap-1 text-xs text-amber-500 font-semibold hover:text-amber-400 underline underline-offset-4"
+            >
+              Find books to read
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </>,
+        )}
 
-          {reading.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
-              <p className="text-sm text-parchment-500 max-w-xs mb-4">
-                No books here. Discover new reads or move a book here to start
-                tracking!
-              </p>
-              <Link
-                href="/discover"
-                className="inline-flex items-center gap-1 text-xs text-amber-500 font-semibold hover:text-amber-400 underline underline-offset-4"
-              >
-                Find books to read
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-y-6 gap-x-4 justify-items-center">
-              {reading.map(renderBookCard)}
-            </div>
-          )}
-        </section>
+        {renderColumn(
+          1,
+          sectionRefs[1],
+          "Finished",
+          "bg-emerald-500",
+          "shadow-[0_0_8px_rgba(16,185,129,0.5)]",
+          false,
+          finished,
+          <p className="text-sm text-parchment-500">
+            Keep reading! Your finished library books will appear here.
+          </p>,
+        )}
 
-        {/* Finished Column */}
-        <section className="bg-ink-900 border border-ink-800 rounded-2xl p-6 min-h-[400px] flex flex-col shadow-xl">
-          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ink-850">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-            <h2 className="font-sans text-lg font-bold">Finished</h2>
-            <span className="text-xs bg-ink-950 px-2 py-0.5 rounded text-parchment-500 border border-ink-850 ml-auto">
-              {finished.length}
-            </span>
-          </div>
-
-          {finished.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-12 text-center text-parchment-500 text-sm">
-              Keep reading! Your finished library books will appear here.
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-y-6 gap-x-4 justify-items-center">
-              {finished.map(renderBookCard)}
-            </div>
-          )}
-        </section>
-
-        {/* Want to Read Column */}
-        <section className="bg-ink-900 border border-ink-800 rounded-2xl p-6 min-h-[400px] flex flex-col shadow-xl">
-          <div className="flex items-center gap-2 mb-6 pb-4 border-b border-ink-850">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
-            <h2 className="font-sans text-lg font-bold">Want to Read</h2>
-            <span className="text-xs bg-ink-950 px-2 py-0.5 rounded text-parchment-500 border border-ink-850 ml-auto">
-              {wantToRead.length}
-            </span>
-          </div>
-
-          {wantToRead.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-12 text-center text-parchment-500 text-sm">
-              Add books from search that you want to read in the future.
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-y-6 gap-x-4 justify-items-center">
-              {wantToRead.map(renderBookCard)}
-            </div>
-          )}
-        </section>
+        {renderColumn(
+          2,
+          sectionRefs[2],
+          "Want to Read",
+          "bg-indigo-500",
+          "shadow-[0_0_8px_rgba(99,102,241,0.5)]",
+          false,
+          wantToRead,
+          <p className="text-sm text-parchment-500">
+            Add books from search that you want to read in the future.
+          </p>,
+        )}
       </div>
 
-      {/* Detail Modal Overlay */}
+      {/* ── Detail Modal Overlay ─────────────────────────────────────────── */}
       {selectedItem && (
         <div
           className={`fixed inset-0 z-50 flex items-center justify-center px-4 bg-ink-950/80 backdrop-blur-sm transition-opacity duration-200 ${
@@ -406,12 +508,12 @@ export default function ShelfView({
               ref={closeButtonRef}
               onClick={handleCloseModal}
               aria-label="Close details"
-              className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-full bg-ink-950 border border-ink-800 text-parchment-500 hover:text-parchment-100 hover:bg-ink-850 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer"
+              className="absolute top-1.5 right-1.5 z-20 p-1.5 rounded-full bg-ink-950 border border-ink-800 text-parchment-500 hover:text-parchment-100 hover:bg-ink-850 focus:outline-none focus:ring-1 focus:ring-amber-500 cursor-pointer transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
 
-            {/* Left part: Cover image details */}
+            {/* Left: Cover image */}
             <div className="w-full md:w-[220px] bg-ink-950 p-6 flex flex-col items-center md:items-start text-center md:text-left justify-between border-r border-ink-850">
               <div className="space-y-4 w-full flex flex-col items-center">
                 <div className="relative aspect-[2/3] w-32 rounded-lg overflow-hidden border border-ink-850 shadow-md">
@@ -461,9 +563,8 @@ export default function ShelfView({
               </div>
             </div>
 
-            {/* Right part: logging & reviewing actions */}
+            {/* Right: Logging & reviewing */}
             <div className="flex-1 p-6 md:p-8 space-y-6 overflow-y-auto max-h-[500px] md:max-h-none text-left">
-              {/* Notification Banner */}
               {actionError && (
                 <div className="p-3 rounded-lg bg-red-950/40 border border-red-900/50 text-red-200 text-xs">
                   {actionError}
@@ -475,7 +576,7 @@ export default function ShelfView({
                 </div>
               )}
 
-              {/* Progress Log Box */}
+              {/* Progress Log */}
               <div className="space-y-4">
                 <div className="flex justify-between items-center text-sm font-semibold">
                   <span>Reading Progress</span>
@@ -493,7 +594,7 @@ export default function ShelfView({
                 </div>
                 <div className="w-full bg-ink-950 rounded-full h-2 overflow-hidden border border-ink-850">
                   <div
-                    className="bg-amber-500 h-full rounded-full transition-all duration-300"
+                    className="bg-amber-500 h-full rounded-full transition-all duration-500"
                     style={{
                       width: `${Math.min(100, (selectedItem.current_page / selectedItem.books.page_count) * 100)}%`,
                     }}
@@ -521,7 +622,7 @@ export default function ShelfView({
                     />
                     <button
                       type="submit"
-                      className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-bold px-4 py-2 rounded-lg text-xs transition-all focus:outline-none"
+                      className="bg-amber-500 hover:bg-amber-600 text-ink-950 font-bold px-4 py-2 rounded-lg text-xs transition-all focus:outline-none cursor-pointer"
                     >
                       Log Pages
                     </button>
@@ -529,7 +630,7 @@ export default function ShelfView({
                 )}
               </div>
 
-              {/* Review Ratings editor */}
+              {/* Review & Rating */}
               <div className="pt-6 border-t border-ink-850 space-y-4">
                 <h4 className="text-sm font-semibold">Review & Rating</h4>
                 <form onSubmit={handleReviewSubmit} className="space-y-4">
@@ -562,7 +663,7 @@ export default function ShelfView({
                           role="radio"
                           aria-checked={reviewRating === star}
                           aria-label={`${star} Star${star > 1 ? "s" : ""}`}
-                          className="p-1 focus:outline-none focus:ring-1 focus:ring-amber-500 rounded text-amber-500 cursor-pointer"
+                          className="p-1 focus:outline-none focus:ring-1 focus:ring-amber-500 rounded text-amber-500 cursor-pointer transition-transform hover:scale-110"
                         >
                           <Star
                             className={`w-6 h-6 transition-all ${
@@ -595,7 +696,7 @@ export default function ShelfView({
 
                   <button
                     type="submit"
-                    className="bg-ink-850 hover:bg-ink-800 border border-ink-800 hover:border-amber-500/20 text-parchment-100 font-semibold px-4 py-2 rounded-lg text-xs transition-all focus:outline-none"
+                    className="bg-ink-850 hover:bg-ink-800 border border-ink-800 hover:border-amber-500/20 text-parchment-100 font-semibold px-4 py-2 rounded-lg text-xs transition-all focus:outline-none cursor-pointer"
                   >
                     Save Review
                   </button>

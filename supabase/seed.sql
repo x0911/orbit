@@ -1,7 +1,14 @@
 -- Seed data for Orbit project
 
--- 1. Create auth users with bcrypt hashed passwords ('orbitdemo123')
--- Default bcrypt hash for 'orbitdemo123': $2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.
+-- 1. Create auth users with properly hashed passwords ('orbitdemo123')
+--
+-- IMPORTANT: Two seed bugs to avoid on future reseeds:
+--   (a) The encrypted_password must be a REAL bcrypt hash — use crypt('orbitdemo123', gen_salt('bf', 10))
+--       NOT a hardcoded string, which will cause Supabase Auth to return 500 on login.
+--   (b) Fields like confirmation_token, recovery_token, etc. must be '' (empty string), NOT NULL.
+--       NULL for these columns causes "sql: Scan error on column index N, name X: converting NULL
+--       to string is unsupported" and another 500 from the Auth service.
+--
 insert into auth.users (
   id,
   instance_id,
@@ -13,18 +20,26 @@ insert into auth.users (
   role,
   aud,
   created_at,
-  updated_at
+  updated_at,
+  confirmation_token,
+  recovery_token,
+  email_change_token_new,
+  email_change_token_current,
+  email_change,
+  phone_change,
+  phone_change_token,
+  reauthentication_token
 )
 values
-  ('d0000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'demo@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"demo_user", "display_name":"Guest Demo"}', 'authenticated', 'authenticated', now(), now()),
-  ('d0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'sarah@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"sarah_reads", "display_name":"Sarah Jenkins"}', 'authenticated', 'authenticated', now(), now()),
-  ('d0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'alex@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"alex_lit", "display_name":"Alex Carter"}', 'authenticated', 'authenticated', now(), now()),
-  ('d0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'elena@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"elena_b", "display_name":"Elena Rostova"}', 'authenticated', 'authenticated', now(), now()),
-  ('d0000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'marcus@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"marcus_v", "display_name":"Marcus Aurelius"}', 'authenticated', 'authenticated', now(), now()),
-  ('d0000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'olivia@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"olivia_pages", "display_name":"Olivia Thorne"}', 'authenticated', 'authenticated', now(), now()),
-  ('d0000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'liam@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"liam_bookworm", "display_name":"Liam Vance"}', 'authenticated', 'authenticated', now(), now()),
-  ('d0000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000000', 'chloe@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"chloe_novel", "display_name":"Chloe Bennett"}', 'authenticated', 'authenticated', now(), now()),
-  ('d0000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000000', 'david@orbit.com', '$2a$10$tQ0W1kE6Mh0QkG2N2/2U7O6Nq6GvFwM/rFp01C2M1FpQ0W1kE6Mh.', now(), '{"provider":"email","providers":["email"]}', '{"username":"david_words", "display_name":"David Miller"}', 'authenticated', 'authenticated', now(), now())
+  ('d0000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000000', 'demo@orbit.com',  crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"demo_user",   "display_name":"Guest Demo"}',       'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', ''),
+  ('d0000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000000', 'sarah@orbit.com', crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"sarah_reads", "display_name":"Sarah Jenkins"}',    'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', ''),
+  ('d0000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000000', 'alex@orbit.com',  crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"alex_lit",    "display_name":"Alex Carter"}',      'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', ''),
+  ('d0000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000000', 'elena@orbit.com', crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"elena_b",     "display_name":"Elena Rostova"}',    'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', ''),
+  ('d0000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000000', 'marcus@orbit.com',crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"marcus_v",    "display_name":"Marcus Aurelius"}',  'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', ''),
+  ('d0000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000000', 'olivia@orbit.com',crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"olivia_pages","display_name":"Olivia Thorne"}',    'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', ''),
+  ('d0000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000000', 'liam@orbit.com',  crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"liam_bookworm","display_name":"Liam Vance"}',      'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', ''),
+  ('d0000000-0000-0000-0000-000000000007', '00000000-0000-0000-0000-000000000000', 'chloe@orbit.com', crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"chloe_novel", "display_name":"Chloe Bennett"}',    'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', ''),
+  ('d0000000-0000-0000-0000-000000000008', '00000000-0000-0000-0000-000000000000', 'david@orbit.com', crypt('orbitdemo123', gen_salt('bf', 10)), now(), '{"provider":"email","providers":["email"]}', '{"username":"david_words", "display_name":"David Miller"}',     'authenticated', 'authenticated', now(), now(), '', '', '', '', '', '', '', '')
 on conflict (id) do nothing;
 
 -- 2. Populate/Update Profiles details
