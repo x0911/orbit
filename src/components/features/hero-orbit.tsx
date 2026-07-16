@@ -10,35 +10,99 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const COVER_IMAGES = [
-  "https://covers.openlibrary.org/b/id/8286708-L.jpg", // The Hobbit
-  "https://covers.openlibrary.org/b/id/12818862-L.jpg", // 1984
-  "https://covers.openlibrary.org/b/id/8225266-L.jpg", // Mockingbird
-  "https://covers.openlibrary.org/b/id/10174092-L.jpg", // Dune
-  "https://covers.openlibrary.org/b/id/8345719-L.jpg", // Neuromancer
+const COVER_BOOKS = [
+  { title: "THE HOBBIT", author: "J.R.R. Tolkien", color1: "#064E3B", color2: "#0A3C27" },
+  { title: "NEUROMANCER", author: "William Gibson", color1: "#059669", color2: "#064E3B" },
+  { title: "1984", author: "George Orwell", color1: "#10B981", color2: "#059669" },
+  { title: "DUNE", author: "Frank Herbert", color1: "#047857", color2: "#0D1410" },
+  { title: "FOUNDATION", author: "Isaac Asimov", color1: "#34D399", color2: "#059669" },
 ];
 
+function createBookCoverCanvas(title: string, author: string, color1: string, color2: string) {
+  if (typeof window === "undefined") return null;
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 384;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return null;
+
+  // Background Gradient
+  const grad = ctx.createLinearGradient(0, 0, 0, 384);
+  grad.addColorStop(0, color1);
+  grad.addColorStop(1, color2);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 384);
+
+  // Border designs
+  ctx.strokeStyle = "#ffffff44";
+  ctx.lineWidth = 6;
+  ctx.strokeRect(16, 16, 224, 352);
+  ctx.strokeStyle = "#ffffff11";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(24, 24, 208, 336);
+
+  // Typography
+  ctx.fillStyle = "#ffffff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  // Title
+  ctx.font = "bold 20px serif";
+  const words = title.split(" ");
+  if (words.length === 1) {
+    ctx.fillText(title, 128, 120);
+  } else {
+    ctx.fillText(words.slice(0, Math.ceil(words.length / 2)).join(" "), 128, 100);
+    ctx.fillText(words.slice(Math.ceil(words.length / 2)).join(" "), 128, 130);
+  }
+
+  // Author
+  ctx.font = "italic 13px sans-serif";
+  ctx.fillStyle = "#ffffffaa";
+  ctx.fillText(`by ${author}`, 128, 200);
+
+  // Emblem
+  ctx.fillStyle = "#ffffffcc";
+  ctx.beginPath();
+  ctx.arc(128, 280, 14, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = color1;
+  ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  ctx.arc(128, 280, 9, 0, Math.PI * 2);
+  ctx.stroke();
+
+  return canvas;
+}
+
 // 1. Stylized 3D Open Book Component
-function StylizedBook() {
+function StylizedBook({ isLight }: { isLight: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const prefersReducedMotion = useReducedMotion();
   const [leftTex, setLeftTex] = useState<THREE.Texture | null>(null);
   const [rightTex, setRightTex] = useState<THREE.Texture | null>(null);
 
   useEffect(() => {
-    const loader = new THREE.TextureLoader();
-    const leftUrl = COVER_IMAGES[Math.floor(Math.random() * COVER_IMAGES.length)];
-    const rightUrl = COVER_IMAGES[Math.floor(Math.random() * COVER_IMAGES.length)];
+    const leftBook = COVER_BOOKS[Math.floor(Math.random() * COVER_BOOKS.length)];
+    let rightBook = COVER_BOOKS[Math.floor(Math.random() * COVER_BOOKS.length)];
+    while (rightBook === leftBook) {
+      rightBook = COVER_BOOKS[Math.floor(Math.random() * COVER_BOOKS.length)];
+    }
 
-    loader.load(leftUrl, (tex) => {
+    const leftCanvas = createBookCoverCanvas(leftBook.title, leftBook.author, leftBook.color1, leftBook.color2);
+    const rightCanvas = createBookCoverCanvas(rightBook.title, rightBook.author, rightBook.color1, rightBook.color2);
+
+    if (leftCanvas) {
+      const tex = new THREE.CanvasTexture(leftCanvas);
       tex.colorSpace = THREE.SRGBColorSpace;
       setLeftTex(tex);
-    });
-
-    loader.load(rightUrl, (tex) => {
+    }
+    if (rightCanvas) {
+      const tex = new THREE.CanvasTexture(rightCanvas);
       tex.colorSpace = THREE.SRGBColorSpace;
       setRightTex(tex);
-    });
+    }
   }, []);
 
   // Gentle floating animation
@@ -49,18 +113,22 @@ function StylizedBook() {
     groupRef.current.rotation.y = Math.sin(t * 0.2) * 0.05;
   });
 
+  const coverColor = isLight ? "#E6F4ED" : "#0D1410";
+  const pageSideColor = isLight ? "#FAF6EE" : "#121C17";
+  const outlineColor = isLight ? "#047857" : "#10B981";
+
   return (
     <group ref={groupRef}>
       {/* Book Cover - Left side */}
       <group position={[-0.75, 0, 0]} rotation={[0, 0.25, 0]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[1.4, 2, 0.06]} />
-          <meshBasicMaterial color="#0B0908" />
+          <meshBasicMaterial color={coverColor} />
         </mesh>
         {/* Wireframe Outline */}
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(1.4, 2, 0.06)]} />
-          <lineBasicMaterial color="#10B981" linewidth={1.5} />
+          <lineBasicMaterial color={outlineColor} linewidth={1.5} />
         </lineSegments>
       </group>
 
@@ -68,12 +136,12 @@ function StylizedBook() {
       <group position={[0.75, 0, 0]} rotation={[0, -0.25, 0]}>
         <mesh castShadow receiveShadow>
           <boxGeometry args={[1.4, 2, 0.06]} />
-          <meshBasicMaterial color="#0B0908" />
+          <meshBasicMaterial color={coverColor} />
         </mesh>
         {/* Wireframe Outline */}
         <lineSegments>
           <edgesGeometry args={[new THREE.BoxGeometry(1.4, 2, 0.06)]} />
-          <lineBasicMaterial color="#10B981" linewidth={1.5} />
+          <lineBasicMaterial color={outlineColor} linewidth={1.5} />
         </lineSegments>
       </group>
 
@@ -81,16 +149,17 @@ function StylizedBook() {
       <group position={[-0.68, 0, 0.04]} rotation={[0, 0.2, 0]}>
         <mesh>
           <boxGeometry args={[1.25, 1.9, 0.04]} />
-          <meshBasicMaterial attach="material-0" color="#0B0908" />
-          <meshBasicMaterial attach="material-1" color="#0B0908" />
-          <meshBasicMaterial attach="material-2" color="#0B0908" />
-          <meshBasicMaterial attach="material-3" color="#0B0908" />
-          {leftTex ? (
-            <meshBasicMaterial attach="material-4" map={leftTex} />
-          ) : (
-            <meshBasicMaterial attach="material-4" color="#0F1A15" />
-          )}
-          <meshBasicMaterial attach="material-5" color="#0B0908" />
+          <meshBasicMaterial attach="material-0" color={pageSideColor} />
+          <meshBasicMaterial attach="material-1" color={pageSideColor} />
+          <meshBasicMaterial attach="material-2" color={pageSideColor} />
+          <meshBasicMaterial attach="material-3" color={pageSideColor} />
+          <meshBasicMaterial 
+            key={leftTex ? `left-tex-${leftTex.uuid}` : "left-plain"}
+            attach="material-4" 
+            map={leftTex || undefined} 
+            color={leftTex ? undefined : pageSideColor} 
+          />
+          <meshBasicMaterial attach="material-5" color={pageSideColor} />
         </mesh>
       </group>
 
@@ -98,16 +167,17 @@ function StylizedBook() {
       <group position={[0.68, 0, 0.04]} rotation={[0, -0.2, 0]}>
         <mesh>
           <boxGeometry args={[1.25, 1.9, 0.04]} />
-          <meshBasicMaterial attach="material-0" color="#0B0908" />
-          <meshBasicMaterial attach="material-1" color="#0B0908" />
-          <meshBasicMaterial attach="material-2" color="#0B0908" />
-          <meshBasicMaterial attach="material-3" color="#0B0908" />
-          {rightTex ? (
-            <meshBasicMaterial attach="material-4" map={rightTex} />
-          ) : (
-            <meshBasicMaterial attach="material-4" color="#0F1A15" />
-          )}
-          <meshBasicMaterial attach="material-5" color="#0B0908" />
+          <meshBasicMaterial attach="material-0" color={pageSideColor} />
+          <meshBasicMaterial attach="material-1" color={pageSideColor} />
+          <meshBasicMaterial attach="material-2" color={pageSideColor} />
+          <meshBasicMaterial attach="material-3" color={pageSideColor} />
+          <meshBasicMaterial 
+            key={rightTex ? `right-tex-${rightTex.uuid}` : "right-plain"}
+            attach="material-4" 
+            map={rightTex || undefined} 
+            color={rightTex ? undefined : pageSideColor} 
+          />
+          <meshBasicMaterial attach="material-5" color={pageSideColor} />
         </mesh>
       </group>
     </group>
@@ -310,7 +380,7 @@ export default function HeroOrbit() {
           <ambientLight intensity={isLight ? 0.6 : 0.2} />
           <pointLight position={[5, 5, 5]} intensity={0.8} color="#10B981" />
           
-          <StylizedBook />
+          <StylizedBook isLight={isLight} />
           
           {moonsData.map((moon, index) => (
             <BookMoon
