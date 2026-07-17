@@ -925,21 +925,9 @@ export default function Library3DExperience({
     setInteractSignal((s) => s + 1);
   }, []);
 
-  const handleInteract = useCallback(
-    (book: LibraryBook) => {
-      setHeldBook(book);
-      // Release the mouse so the user can actually click tabs / type a review
-      // in the hand-UI panel — while pointer-locked there's no visible cursor.
-      if (!isTouch && document.pointerLockElement) {
-        try {
-          document.exitPointerLock();
-        } catch {
-          // no-op
-        }
-      }
-    },
-    [isTouch],
-  );
+  const handleInteract = useCallback((book: LibraryBook) => {
+    setHeldBook(book);
+  }, []);
 
   const handleRelease = useCallback(() => {
     setHeldBook(null);
@@ -958,15 +946,35 @@ export default function Library3DExperience({
     return s;
   }, [heldBook]);
 
+  // Any dialog (controls modal or the held-book panel) must fully own mouse
+  // input while it's open. Previously PointerLockControls stayed mounted (and
+  // listening for clicks) underneath every dialog, so a stray click could
+  // silently re-lock the pointer — hiding the cursor again and making the
+  // dialog un-clickable until the user pressed Esc. Now: whenever a dialog is
+  // open we (a) proactively release any active lock, and (b) unmount
+  // PointerLockControls entirely below, so there is no listener left that
+  // could re-acquire it while the dialog is up.
+  const dialogOpen = showControls || !!heldBook;
+  useEffect(() => {
+    if (isTouch || !dialogOpen) return;
+    if (document.pointerLockElement) {
+      try {
+        document.exitPointerLock();
+      } catch {
+        // no-op
+      }
+    }
+  }, [isTouch, dialogOpen]);
+
   // Desktop click has two jobs depending on state:
   //  - not locked yet → this click's job is just to lock the pointer (handled
   //    natively by drei's PointerLockControls); we don't also treat it as "pick up".
   //  - already locked → this click means "interact with whatever I'm looking at".
   const handleCanvasClick = useCallback(() => {
-    if (isTouch) return;
+    if (isTouch || dialogOpen) return;
     if (!locked) return;
     handleInteractPress();
-  }, [isTouch, locked, handleInteractPress]);
+  }, [isTouch, dialogOpen, locked, handleInteractPress]);
 
   const handleExit = useCallback(() => {
     try {
@@ -1031,7 +1039,7 @@ export default function Library3DExperience({
           heldBookActive={!!heldBook}
         />
 
-        {!isTouch && ready && (
+        {!isTouch && ready && !dialogOpen && (
           <PointerLockControls
             ref={plcRef}
             onLock={() => setLocked(true)}

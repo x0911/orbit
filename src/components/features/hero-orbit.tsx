@@ -426,16 +426,20 @@ function DarkHeroScene({
     return () => trigger.kill();
   }, [prefersReducedMotion, containerRef]);
 
-  if (!inView) {
-    return <div className="absolute inset-0 bg-[#060B08]" />;
-  }
-
   return (
     <Canvas
       gl={{ antialias: true, powerPreference: "high-performance" }}
       dpr={[1, 2]}
       camera={{ position: [0, 0, 5], fov: 45 }}
       className="absolute inset-0 z-0 pointer-events-none"
+      // Pause the render loop while scrolled out of view instead of
+      // unmounting the Canvas entirely — unmounting was cancelling in-flight
+      // cover image loads every time the hero scrolled a pixel out of the
+      // IntersectionObserver's bounds, which meant a texture could get stuck
+      // permanently mid-load and never show. Pausing keeps everything
+      // (including already-loaded textures) alive while still saving CPU/GPU
+      // work when off-screen.
+      frameloop={inView ? "always" : "never"}
     >
       <color attach="background" args={["#060B08"]} />
       <ambientLight intensity={0.15} />
