@@ -7,72 +7,54 @@ import * as THREE from "three";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { useCoverTexture } from "@/lib/cover-texture";
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Real Open Library covers (same books seeded into the demo library) so the
+// orbiting "books" show actual cover art instead of a hand-drawn placeholder.
 const COVER_BOOKS = [
-  { title: "THE HOBBIT", author: "J.R.R. Tolkien", color1: "#064E3B", color2: "#0A3C27" },
-  { title: "NEUROMANCER", author: "William Gibson", color1: "#059669", color2: "#064E3B" },
-  { title: "1984", author: "George Orwell", color1: "#10B981", color2: "#059669" },
-  { title: "DUNE", author: "Frank Herbert", color1: "#047857", color2: "#0D1410" },
-  { title: "FOUNDATION", author: "Isaac Asimov", color1: "#34D399", color2: "#059669" },
-  { title: "FRANKENSTEIN", author: "Mary Shelley", color1: "#0A3C27", color2: "#064E3B" },
-  { title: "GATSBY", author: "F. Scott Fitzgerald", color1: "#E6A62E", color2: "#0D1410" },
-  { title: "SNOW CRASH", author: "Neal Stephenson", color1: "#059669", color2: "#0A3C27" },
+  {
+    title: "The Hobbit",
+    coverUrl: "https://covers.openlibrary.org/b/id/8286708-L.jpg",
+    color1: "#064E3B",
+  },
+  {
+    title: "1984",
+    coverUrl: "https://covers.openlibrary.org/b/id/12818862-L.jpg",
+    color1: "#059669",
+  },
+  {
+    title: "To Kill a Mockingbird",
+    coverUrl: "https://covers.openlibrary.org/b/id/8225266-L.jpg",
+    color1: "#10B981",
+  },
+  {
+    title: "The Great Gatsby",
+    coverUrl: "https://covers.openlibrary.org/b/id/8432047-L.jpg",
+    color1: "#E6A62E",
+  },
+  {
+    title: "Dune",
+    coverUrl: "https://covers.openlibrary.org/b/id/10174092-L.jpg",
+    color1: "#047857",
+  },
+  {
+    title: "Neuromancer",
+    coverUrl: "https://covers.openlibrary.org/b/id/8345719-L.jpg",
+    color1: "#0A3C27",
+  },
+  {
+    title: "Frankenstein",
+    coverUrl: "https://covers.openlibrary.org/b/id/9253578-L.jpg",
+    color1: "#34D399",
+  },
+  {
+    title: "Pride and Prejudice",
+    coverUrl: "https://covers.openlibrary.org/b/id/8312015-L.jpg",
+    color1: "#059669",
+  },
 ];
-
-// ── Canvas texture generators ──────────────────────────────────────────────
-function createBookCoverCanvas(title: string, author: string, color1: string, color2: string) {
-  if (typeof window === "undefined") return null;
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 384;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return null;
-
-  const grad = ctx.createLinearGradient(0, 0, 0, 384);
-  grad.addColorStop(0, color1);
-  grad.addColorStop(1, color2);
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 256, 384);
-
-  ctx.strokeStyle = "#ffffff44";
-  ctx.lineWidth = 6;
-  ctx.strokeRect(16, 16, 224, 352);
-  ctx.strokeStyle = "#ffffff11";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(24, 24, 208, 336);
-
-  ctx.fillStyle = "#ffffff";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-
-  ctx.font = "bold 20px serif";
-  const words = title.split(" ");
-  if (words.length === 1) {
-    ctx.fillText(title, 128, 120);
-  } else {
-    ctx.fillText(words.slice(0, Math.ceil(words.length / 2)).join(" "), 128, 100);
-    ctx.fillText(words.slice(Math.ceil(words.length / 2)).join(" "), 128, 130);
-  }
-
-  ctx.font = "italic 13px sans-serif";
-  ctx.fillStyle = "#ffffffaa";
-  ctx.fillText(`by ${author}`, 128, 200);
-
-  ctx.fillStyle = "#ffffffcc";
-  ctx.beginPath();
-  ctx.arc(128, 280, 14, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.strokeStyle = color1;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  ctx.arc(128, 280, 9, 0, Math.PI * 2);
-  ctx.stroke();
-
-  return canvas;
-}
 
 function createGlowTexture(hex: string) {
   if (typeof window === "undefined") return null;
@@ -82,7 +64,14 @@ function createGlowTexture(hex: string) {
   canvas.height = size;
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
-  const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  const grad = ctx.createRadialGradient(
+    size / 2,
+    size / 2,
+    0,
+    size / 2,
+    size / 2,
+    size / 2,
+  );
   grad.addColorStop(0, hex);
   grad.addColorStop(0.4, hex);
   grad.addColorStop(1, "rgba(0,0,0,0)");
@@ -92,15 +81,15 @@ function createGlowTexture(hex: string) {
 }
 
 // ── Glowing portal core ─────────────────────────────────────────────────────
-function PortalCore({ isLight }: { isLight: boolean }) {
+function PortalCore() {
   const coreRef = useRef<THREE.Group>(null);
   const ringRef = useRef<THREE.Mesh>(null);
   const prefersReducedMotion = useReducedMotion();
 
   const glowTex = useMemo(() => {
-    const c = createGlowTexture(isLight ? "rgba(4,120,87,0.9)" : "rgba(16,185,129,0.9)");
+    const c = createGlowTexture("rgba(16,185,129,0.9)");
     return c ? new THREE.CanvasTexture(c) : null;
-  }, [isLight]);
+  }, []);
 
   useFrame((state) => {
     if (prefersReducedMotion) return;
@@ -131,19 +120,19 @@ function PortalCore({ isLight }: { isLight: boolean }) {
       {/* Wireframe torus "portal ring" */}
       <mesh ref={ringRef}>
         <torusGeometry args={[1.15, 0.02, 16, 100]} />
-        <meshBasicMaterial color={isLight ? "#047857" : "#34D399"} transparent opacity={0.8} />
+        <meshBasicMaterial color="#34D399" transparent opacity={0.8} />
       </mesh>
       <mesh rotation={[Math.PI / 2, 0, 0]}>
         <torusGeometry args={[0.95, 0.008, 16, 100]} />
-        <meshBasicMaterial color={isLight ? "#059669" : "#10B981"} transparent opacity={0.5} />
+        <meshBasicMaterial color="#10B981" transparent opacity={0.5} />
       </mesh>
 
-      <pointLight color={isLight ? "#059669" : "#10B981"} intensity={2.2} distance={8} />
+      <pointLight color="#10B981" intensity={2.2} distance={8} />
     </group>
   );
 }
 
-// ── Orbiting book cover ──────────────────────────────────────────────────────
+// ── Orbiting book cover (real preloaded cover art, with a soft pulse while it loads) ─
 interface OrbitBookProps {
   radius: number;
   speed: number;
@@ -153,19 +142,18 @@ interface OrbitBookProps {
   book: (typeof COVER_BOOKS)[number];
 }
 
-function OrbitingBook({ radius, speed, tiltX, tiltZ, initialAngle, book }: OrbitBookProps) {
+function OrbitingBook({
+  radius,
+  speed,
+  tiltX,
+  tiltZ,
+  initialAngle,
+  book,
+}: OrbitBookProps) {
   const groupRef = useRef<THREE.Group>(null);
+  const placeholderMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const prefersReducedMotion = useReducedMotion();
-  const [tex, setTex] = useState<THREE.Texture | null>(null);
-
-  useEffect(() => {
-    const canvas = createBookCoverCanvas(book.title, book.author, book.color1, book.color2);
-    if (canvas) {
-      const t = new THREE.CanvasTexture(canvas);
-      t.colorSpace = THREE.SRGBColorSpace;
-      setTex(t);
-    }
-  }, [book]);
+  const texture = useCoverTexture(book.coverUrl);
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -190,6 +178,12 @@ function OrbitingBook({ radius, speed, tiltX, tiltZ, initialAngle, book }: Orbit
     x = tempX;
 
     groupRef.current.position.set(x, y, z);
+
+    // Gentle "preloading" pulse on the placeholder while the real cover loads
+    if (!texture && placeholderMatRef.current) {
+      const pulse = 0.55 + Math.sin(elapsed * 3 + initialAngle) * 0.25;
+      placeholderMatRef.current.opacity = pulse;
+    }
   });
 
   return (
@@ -208,10 +202,15 @@ function OrbitingBook({ radius, speed, tiltX, tiltZ, initialAngle, book }: Orbit
         </mesh>
         <mesh>
           <planeGeometry args={[0.42, 0.63]} />
-          {tex ? (
-            <meshBasicMaterial map={tex} toneMapped={false} />
+          {texture ? (
+            <meshBasicMaterial map={texture} toneMapped={false} />
           ) : (
-            <meshBasicMaterial color={book.color1} />
+            <meshBasicMaterial
+              ref={placeholderMatRef}
+              color={book.color1}
+              transparent
+              opacity={0.7}
+            />
           )}
         </mesh>
       </Billboard>
@@ -220,7 +219,7 @@ function OrbitingBook({ radius, speed, tiltX, tiltZ, initialAngle, book }: Orbit
 }
 
 // ── Ember particles ──────────────────────────────────────────────────────────
-function Embers({ isLight }: { isLight: boolean }) {
+function Embers() {
   const pointsRef = useRef<THREE.Points>(null);
   const prefersReducedMotion = useReducedMotion();
   const count = 220;
@@ -241,7 +240,8 @@ function Embers({ isLight }: { isLight: boolean }) {
 
   useFrame(() => {
     if (prefersReducedMotion || !pointsRef.current) return;
-    const arr = pointsRef.current.geometry.attributes.position.array as Float32Array;
+    const arr = pointsRef.current.geometry.attributes.position
+      .array as Float32Array;
     for (let i = 0; i < count; i++) {
       arr[i * 3 + 1] += speeds[i] * 0.016;
       if (arr[i * 3 + 1] > 1.8) arr[i * 3 + 1] = -1.8;
@@ -259,7 +259,7 @@ function Embers({ isLight }: { isLight: boolean }) {
     <points ref={pointsRef} geometry={geometry}>
       <pointsMaterial
         size={0.035}
-        color={isLight ? "#047857" : "#6EE7B7"}
+        color="#6EE7B7"
         transparent
         opacity={0.55}
         blending={THREE.AdditiveBlending}
@@ -298,46 +298,109 @@ function SceneController({
     const parallaxY = pointer.y * 0.25;
 
     targetCamPos.current.set(parallaxX, parallaxY, baseZ);
-    targetCamRot.current.set(baseRotX - parallaxY * 0.1, baseRotY + parallaxX * 0.1, 0);
+    targetCamRot.current.set(
+      baseRotX - parallaxY * 0.1,
+      baseRotY + parallaxX * 0.1,
+      0,
+    );
 
     camera.position.lerp(targetCamPos.current, 0.08);
-    camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetCamRot.current.x, 0.08);
-    camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetCamRot.current.y, 0.08);
+    camera.rotation.x = THREE.MathUtils.lerp(
+      camera.rotation.x,
+      targetCamRot.current.x,
+      0.08,
+    );
+    camera.rotation.y = THREE.MathUtils.lerp(
+      camera.rotation.y,
+      targetCamRot.current.y,
+      0.08,
+    );
   });
 
   return null;
 }
 
-export default function HeroOrbit() {
-  const containerRef = useRef<HTMLDivElement>(null);
+const ORBIT_BOOK_CONFIG = [
+  { radius: 1.9, speed: 0.35, tiltX: 0.3, tiltZ: 0.1, initialAngle: 0 },
+  {
+    radius: 2.4,
+    speed: 0.28,
+    tiltX: -0.2,
+    tiltZ: 0.4,
+    initialAngle: Math.PI / 4,
+  },
+  {
+    radius: 2.9,
+    speed: 0.2,
+    tiltX: 0.4,
+    tiltZ: -0.15,
+    initialAngle: Math.PI / 2,
+  },
+  {
+    radius: 3.4,
+    speed: 0.16,
+    tiltX: -0.1,
+    tiltZ: 0.25,
+    initialAngle: (3 * Math.PI) / 4,
+  },
+  {
+    radius: 2.1,
+    speed: -0.24,
+    tiltX: 0.15,
+    tiltZ: -0.3,
+    initialAngle: Math.PI,
+  },
+  {
+    radius: 2.7,
+    speed: -0.19,
+    tiltX: -0.3,
+    tiltZ: 0.05,
+    initialAngle: (5 * Math.PI) / 4,
+  },
+  {
+    radius: 3.2,
+    speed: 0.13,
+    tiltX: 0.05,
+    tiltZ: -0.35,
+    initialAngle: (3 * Math.PI) / 2,
+  },
+  {
+    radius: 3.7,
+    speed: -0.1,
+    tiltX: -0.25,
+    tiltZ: 0.2,
+    initialAngle: (7 * Math.PI) / 4,
+  },
+];
+
+// ── Dark-theme WebGL scene ───────────────────────────────────────────────────
+function DarkHeroScene({
+  containerRef,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const scrollProgress = useRef(0);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
   const [inView, setInView] = useState(true);
-  const [isLight, setIsLight] = useState(false);
   const prefersReducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    setIsLight(document.documentElement.classList.contains("light"));
-    const observer = new MutationObserver(() => {
-      setIsLight(document.documentElement.classList.contains("light"));
-    });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), {
-      threshold: 0.05,
-    });
+    const observer = new IntersectionObserver(
+      ([entry]) => setInView(entry.isIntersecting),
+      {
+        threshold: 0.05,
+      },
+    );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [containerRef]);
 
   useEffect(() => {
     if (prefersReducedMotion) return;
-    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    const isTouchDevice =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
     if (isTouchDevice) return;
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -361,46 +424,98 @@ export default function HeroOrbit() {
       },
     });
     return () => trigger.kill();
-  }, [prefersReducedMotion]);
+  }, [prefersReducedMotion, containerRef]);
 
-  const orbitBooks = [
-    { radius: 1.9, speed: 0.35, tiltX: 0.3, tiltZ: 0.1, initialAngle: 0 },
-    { radius: 2.4, speed: 0.28, tiltX: -0.2, tiltZ: 0.4, initialAngle: Math.PI / 4 },
-    { radius: 2.9, speed: 0.2, tiltX: 0.4, tiltZ: -0.15, initialAngle: Math.PI / 2 },
-    { radius: 3.4, speed: 0.16, tiltX: -0.1, tiltZ: 0.25, initialAngle: (3 * Math.PI) / 4 },
-    { radius: 2.1, speed: -0.24, tiltX: 0.15, tiltZ: -0.3, initialAngle: Math.PI },
-    { radius: 2.7, speed: -0.19, tiltX: -0.3, tiltZ: 0.05, initialAngle: (5 * Math.PI) / 4 },
-    { radius: 3.2, speed: 0.13, tiltX: 0.05, tiltZ: -0.35, initialAngle: (3 * Math.PI) / 2 },
-    { radius: 3.7, speed: -0.1, tiltX: -0.25, tiltZ: 0.2, initialAngle: (7 * Math.PI) / 4 },
-  ];
+  if (!inView) {
+    return <div className="absolute inset-0 bg-[#060B08]" />;
+  }
 
   return (
-    <div ref={containerRef} className="relative w-full h-[100vh] bg-ink-950 overflow-hidden">
-      {inView ? (
-        <Canvas
-          gl={{ antialias: true, powerPreference: "high-performance" }}
-          dpr={[1, 2]}
-          camera={{ position: [0, 0, 5], fov: 45 }}
-          className="absolute inset-0 z-0 pointer-events-none"
-        >
-          <color attach="background" args={[isLight ? "#F4FAF7" : "#060B08"]} />
-          <ambientLight intensity={isLight ? 0.6 : 0.15} />
+    <Canvas
+      gl={{ antialias: true, powerPreference: "high-performance" }}
+      dpr={[1, 2]}
+      camera={{ position: [0, 0, 5], fov: 45 }}
+      className="absolute inset-0 z-0 pointer-events-none"
+    >
+      <color attach="background" args={["#060B08"]} />
+      <ambientLight intensity={0.15} />
 
-          <PortalCore isLight={isLight} />
-          <Embers isLight={isLight} />
+      <PortalCore />
+      <Embers />
 
-          {orbitBooks.map((cfg, i) => (
-            <OrbitingBook key={i} {...cfg} book={COVER_BOOKS[i % COVER_BOOKS.length]} />
-          ))}
+      {ORBIT_BOOK_CONFIG.map((cfg, i) => (
+        <OrbitingBook
+          key={i}
+          {...cfg}
+          book={COVER_BOOKS[i % COVER_BOOKS.length]}
+        />
+      ))}
 
-          {!isLight && (
-            <Stars radius={100} depth={50} count={280} factor={4} saturation={0.5} fade speed={0} />
-          )}
+      <Stars
+        radius={100}
+        depth={50}
+        count={280}
+        factor={4}
+        saturation={0.5}
+        fade
+        speed={0}
+      />
 
-          <SceneController scrollProgress={scrollProgress} pointer={pointer} />
-        </Canvas>
+      <SceneController scrollProgress={scrollProgress} pointer={pointer} />
+    </Canvas>
+  );
+}
+
+// ── Light-theme background: simple, cheap, no WebGL ──────────────────────────
+function LightHeroBackground() {
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-[#F4FAF7]">
+      <div
+        className="hero-light-blob-a absolute top-[15%] left-[10%] w-[55vw] h-[55vw] max-w-[560px] max-h-[560px] rounded-full bg-emerald-500/10 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="hero-light-blob-b absolute bottom-[10%] right-[8%] w-[45vw] h-[45vw] max-w-[460px] max-h-[460px] rounded-full bg-amber-400/10 blur-3xl"
+        aria-hidden
+      />
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 1px 1px, rgba(4,120,87,0.08) 1px, transparent 0)",
+          backgroundSize: "28px 28px",
+        }}
+        aria-hidden
+      />
+    </div>
+  );
+}
+
+export default function HeroOrbit() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isLight, setIsLight] = useState(false);
+
+  useEffect(() => {
+    setIsLight(document.documentElement.classList.contains("light"));
+    const observer = new MutationObserver(() => {
+      setIsLight(document.documentElement.classList.contains("light"));
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full h-[100vh] bg-ink-950 overflow-hidden"
+    >
+      {isLight ? (
+        <LightHeroBackground />
       ) : (
-        <div className={`absolute inset-0 transition-colors duration-200 ${isLight ? "bg-[#F4FAF7]" : "bg-[#060B08]"}`} />
+        <DarkHeroScene containerRef={containerRef} />
       )}
     </div>
   );
