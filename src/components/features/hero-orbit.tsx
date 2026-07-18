@@ -151,9 +151,33 @@ function OrbitingBook({
   book,
 }: OrbitBookProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const placeholderMatRef = useRef<THREE.MeshBasicMaterial>(null);
+  const coverMatRef = useRef<THREE.MeshBasicMaterial>(null);
   const prefersReducedMotion = useReducedMotion();
   const texture = useCoverTexture(book.coverUrl);
+
+  // Assign the texture imperatively once it loads, rather than conditionally
+  // swapping between two different <meshBasicMaterial> JSX elements. The
+  // conditional-swap version was the actual bug: react-three-fiber doesn't
+  // always reattach a freshly-mounted material cleanly when it replaces a
+  // different material type on the same mesh (especially nested inside a
+  // <Billboard>, which re-parents its children every frame) — the plane kept
+  // rendering with its material's default (black) appearance even though the
+  // network request for the cover succeeded. A single, persistent material
+  // whose `.map` we set directly sidesteps that entirely.
+  useEffect(() => {
+    const mat = coverMatRef.current;
+    if (!mat) return;
+    if (texture) {
+      mat.map = texture;
+      mat.color.set("#ffffff");
+      mat.opacity = 1;
+    } else {
+      mat.map = null;
+      mat.color.set(book.color1);
+      mat.opacity = 0.7;
+    }
+    mat.needsUpdate = true;
+  }, [texture, book.color1]);
 
   useFrame((state) => {
     if (!groupRef.current) return;
@@ -180,9 +204,9 @@ function OrbitingBook({
     groupRef.current.position.set(x, y, z);
 
     // Gentle "preloading" pulse on the placeholder while the real cover loads
-    if (!texture && placeholderMatRef.current) {
+    if (!texture && coverMatRef.current) {
       const pulse = 0.55 + Math.sin(elapsed * 3 + initialAngle) * 0.25;
-      placeholderMatRef.current.opacity = pulse;
+      coverMatRef.current.opacity = pulse;
     }
   });
 
@@ -202,16 +226,12 @@ function OrbitingBook({
         </mesh>
         <mesh>
           <planeGeometry args={[0.42, 0.63]} />
-          {texture ? (
-            <meshBasicMaterial map={texture} toneMapped={false} />
-          ) : (
-            <meshBasicMaterial
-              ref={placeholderMatRef}
-              color={book.color1}
-              transparent
-              opacity={0.7}
-            />
-          )}
+          <meshBasicMaterial
+            ref={coverMatRef}
+            transparent
+            toneMapped={false}
+            side={THREE.DoubleSide}
+          />
         </mesh>
       </Billboard>
     </group>
@@ -381,21 +401,7 @@ function DarkHeroScene({
 }) {
   const scrollProgress = useRef(0);
   const [pointer, setPointer] = useState({ x: 0, y: 0 });
-  const [inView, setInView] = useState(true);
   const prefersReducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setInView(entry.isIntersecting),
-      {
-        threshold: 0.05,
-      },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [containerRef]);
 
   useEffect(() => {
     if (prefersReducedMotion) return;
@@ -432,14 +438,6 @@ function DarkHeroScene({
       dpr={[1, 2]}
       camera={{ position: [0, 0, 5], fov: 45 }}
       className="absolute inset-0 z-0 pointer-events-none"
-      // Pause the render loop while scrolled out of view instead of
-      // unmounting the Canvas entirely — unmounting was cancelling in-flight
-      // cover image loads every time the hero scrolled a pixel out of the
-      // IntersectionObserver's bounds, which meant a texture could get stuck
-      // permanently mid-load and never show. Pausing keeps everything
-      // (including already-loaded textures) alive while still saving CPU/GPU
-      // work when off-screen.
-      frameloop={inView ? "always" : "never"}
     >
       <color attach="background" args={["#060B08"]} />
       <ambientLight intensity={0.15} />
